@@ -1,52 +1,38 @@
 ﻿import { L } from "./ebacktesting.core.js";
 
 L.createSettingsUI = function (dialogContainer) {
-    dialogContainer.find("div[class*='tabs']").remove();
-    const container = dialogContainer.find("div[class*='scrollable'] div[class*='content']");
+    dialogContainer.find(L.s(5, 7) /* div[class*='tabs'] */).remove();
+    const container = dialogContainer.find(L.s(5, 9) /* div[class*='scrollable'] div[class*='content'] */);
     container.children().remove();
 
-    const footer = dialogContainer.find("div[class*='footer']");
-    footer.find("span[role='button'][data-role='listbox']").remove();
+    const footer = dialogContainer.find(L.s(6, 0) /* div[class*='footer'] */);
+    footer.find(L.s(6, 1) /* span[role='button'][data-role='listbox'] */).remove();
 
-    container.append($("<h3 class='ebacktesting-dialog-section-title'>Options</h3>"));
-    var section = $("<div>").addClass("ebacktesting-dialog-options-section");
+    container.append($(`<h3 class='${L.s(8, -2) /* ebacktesting-dialog-section-title */}'>${L.s(8, -3) /* Options */}</h3>`));
+    var section = $("<div>").addClass(L.s(9, 3) /* ebacktesting-dialog-options-section */);
     container.append(section);
     var optionsSection = $(`
-            <input type='checkbox' id='ebacktesting-option-MinReplayResolutionDummy' checked>
-            <label for="ebacktesting-option-MinReplayResolution">Minimum step forward</label>
-            <select id="ebacktesting-option-MinReplayResolution">
+            <input type='checkbox' id='${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}Dummy' checked>
+            <label for="${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}">Minimum step forward</label>
+            <select id="${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}">
             </select>
-            <span title="The minimum replay interval when clicking the step forward button (Shift + ⇨). When skipping candles, all increments are based on this interval. By default, it's the minimum supported by your TradingView subscription plan." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
+            <span title="${L.s(8, -6) /* The minimum replay interval when clicking the step forward button (Shift + ⇨). When skipping candles, all increments are based on this interval. By default, it's the minimum supported by your TradingView subscription plan. */}" class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true">${L.s(8, -7) /* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg> */}</span></span>
             <br/>
-            <input type='checkbox' id='ebacktesting-option-PreventHTFCandlePreviews' ${L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == 'true' ? "checked" : ""}>
-            <label for='ebacktesting-option-PreventHTFCandlePreviews'>Prevent candle previews when changing timeframes</label>
-            <span title="Workaround for overcoming HTF candle previews: when switching timeframes, it will shortly go back to the previous HTF candle and will automatically play step by step from there, to depict the accurate current HTF candle state in the end" class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
+            <input type='checkbox' id='${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -8) /* PreventHTFCandlePreviews */}' ${L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == L.s(0, 6) /* true */ ? L.s(7, 3) /* checked */ : ""}>
+            <label for='${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -8) /* PreventHTFCandlePreviews */}'>${L.s(8, -9) /* Prevent candle previews when changing timeframes */}</label>
+            <span title="${L.s(9, -1) /* Workaround for overcoming HTF candle previews: when switching timeframes, it will shortly go back to the previous HTF candle and will automatically play step by step from there, to depict the accurate current HTF candle state in the end */}" class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true">${L.s(8, -7) /* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg> */}</span></span>
             <br/>
-            <input type='checkbox' id='ebacktesting-option-EnablePredefinedTimes' ${L.session.getParameter(L.sessionParameterIds.EnablePredefinedTimes) == 'true' ? "checked" : ""}>
-            <label for='ebacktesting-option-EnablePredefinedTimes'>Stop at hours (HH:mm)</label>
-            <input type='text' id='ebacktesting-option-PredefinedTimes' class="input size-small normal" value='${L.session.getParameter(L.sessionParameterIds.PredefinedTimes)}' placeholder='e.g., 09:30, 12:30, 15:30'>
-            <span title="Automatically stops candle playback at specified times during the day. Useful for regular events like session opens, news releases or your own schedule." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
+            <input type='checkbox' id='${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -2) /* AutoSnapshot */}' ${L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == L.s(0, 6) /* true */ ? L.s(7, 3) /* checked */ : ""}>
+            <label for='${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -2) /* AutoSnapshot */}'>${L.s(9, -3) /* Auto capture trade snapshots */}</label>
+            <span title="${L.s(9, -4) /* Save into the eBacktesting journal panel automatic snapshots of the chart during and after a trade: when the position opens, when either TP or SL gets hit, when BE gets hit, or when the trade is manually closed. */}" class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true">${L.s(8, -7) /* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg> */}</span></span>
             <br/>
-            <input type='checkbox' id='ebacktesting-option-EnableWarmupStart' ${L.session.getParameter(L.sessionParameterIds.EnableWarmupStart) == 'true' ? "checked" : ""}>
-            <label for='ebacktesting-option-EnableWarmupStart'>Warmup jump-to-date</label>
-            <select id="ebacktesting-option-WarmupStartOffset">
-                <option value="300" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '300' ? "selected" : ""}>5m</option>
-                <option value="900" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '900' ? "selected" : ""}>15m</option>
-                <option value="1800" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '1800' ? "selected" : ""}>30m</option>
-                <option value="3600" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '3600' ? "selected" : ""}>1h</option>
-                <option value="7200" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '7200' ? "selected" : ""}>2h</option>
-                <option value="14400" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '14400' ? "selected" : ""}>4h</option>
-                <option value="86400" ${L.session.getParameter(L.sessionParameterIds.WarmupStartOffset) == '86400' ? "selected" : ""}>1D</option>
-            </select>
-            <span title="When jumping to a specific time, a brief playback will take place just before that time to load indicators and prevent seeing future price action (by default, TradingView displays the full candle when navigating to a time that is mid-candle)." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
-            <br/>
-            <input type='checkbox' id='ebacktesting-option-AnalysisTimer' ${L.session.getParameter(L.sessionParameterIds.AnalysisTimer) == 'true' ? "checked" : ""}>
-            <label for='ebacktesting-option-AnalysisTimer'>Show analysis timer</label>
-            <span title="Track how long you spend analyzing each trading opportunity. The timer starts when you pause at any candle." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
+            <input type='checkbox' id='${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -5) /* CanModifyQty*/}' ${L.session.getParameter(L.sessionParameterIds.CanModifyQty) == L.s(0, 6) /* true */ ? L.s(7, 3) /* checked */ : ""}>
+            <label for='${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -5) /* CanModifyQty*/}'>$${L.s(9, -6) /* Allow modifying quantity */}</label>
+            <span title="${L.s(9, -7) /* Enable the ability to modify the quantity (lots) of each trade in the eBacktesting panel. */}" class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true">${L.s(8, -7) /* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg> */}</span></span>
         `);
 
     section.append(optionsSection);
-    $("#ebacktesting-option-MinReplayResolutionDummy")
+    $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}Dummy`)
     .on('click change keydown keyup mousedown mouseup touchstart touchend', function(e) {
         e.preventDefault();
         $(this).prop('checked', true);
@@ -54,7 +40,7 @@ L.createSettingsUI = function (dialogContainer) {
     });
 
     L.getReplayResolutions().then(resolutions => {
-        const select = optionsSection.closest('#ebacktesting-option-MinReplayResolution');
+        const select = optionsSection.closest(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}`);
         resolutions.forEach(resolution => {
             select.append($('<option>', {
                 value: resolution,
@@ -65,51 +51,46 @@ L.createSettingsUI = function (dialogContainer) {
     });
 
     L.session.retrieveParameters().then(() => {
-        $("#ebacktesting-option-MinReplayResolution").val(L.session.getParameter(L.sessionParameterIds.MinReplayResolution));
-        $("#ebacktesting-option-PreventHTFCandlePreviews").prop("checked", L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == 'true');
-        $("#ebacktesting-option-EnablePredefinedTimes").prop("checked", L.session.getParameter(L.sessionParameterIds.EnablePredefinedTimes) == 'true');
-        $("#ebacktesting-option-PredefinedTimes").val(L.session.getParameter(L.sessionParameterIds.PredefinedTimes));
-        $("#ebacktesting-option-EnableWarmupStart").prop("checked", L.session.getParameter(L.sessionParameterIds.EnableWarmupStart) == 'true');
-        $("#ebacktesting-option-WarmupStartOffset").val(L.session.getParameter(L.sessionParameterIds.WarmupStartOffset));
-        $("#ebacktesting-option-AnalysisTimer").prop("checked", L.session.getParameter(L.sessionParameterIds.AnalysisTimer) == 'true');
-        $("#ebacktesting-option-AutoSnapshot").prop("checked", L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == 'true');
-        $("#ebacktesting-option-CanModifyQty").prop("checked", L.session.getParameter(L.sessionParameterIds.CanModifyQty) == 'true');
+        $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}`).val(L.session.getParameter(L.sessionParameterIds.MinReplayResolution));
+        $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -8) /* PreventHTFCandlePreviews */}`).prop(L.s(7, 3) /* checked */, L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == L.s(0, 6) /* true */);
+        $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -2) /* AutoSnapshot */}`).prop(L.s(7, 3) /* checked */, L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == L.s(0, 6) /* true */);
+        $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -5) /* CanModifyQty*/}`).prop(L.s(7, 3) /* checked */, L.session.getParameter(L.sessionParameterIds.CanModifyQty) == L.s(0, 6) /* true */);
     });
 
-    container.append($("<h3 class='ebacktesting-dialog-section-title'>Journal Columns</h3>"));
+    container.append($(`<h3 class='${L.s(8, -2) /* ebacktesting-dialog-section-title */}'>${L.s(9, -8) /* Journal Columns */}</h3>`));
     section = $("<div>")
-        .addClass("ebacktesting-dialog-options-section")
-        .addClass("ebacktesting-journal-options-section");
+        .addClass(L.s(9, 3) /* ebacktesting-dialog-options-section */)
+        .addClass(L.s(9, -9) /* ebacktesting-journal-options-section */);
 
     container.append(section);
 
     var columnsTable = $(`
-        <table class="ebacktesting-dialog-table ebacktesting-column-settings-table">
+        <table class="${L.s(6, 4) /* ebacktesting-dialog-table */} ${L.r.s(0, 0) /* ebacktesting-column-settings-table */}">
         </table>
     `);
 
     const createColumnRow = (column) => {
         const columnRow = $(`
-            <tr data-column-id="${column.columnId}">
-                <td class="column-drag">
-                    <div class="drag-handle">
-                        <svg width="20" height="100%" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="5" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="6" cy="19" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle><circle cx="18" cy="5" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle><circle cx="18" cy="19" r="1.5"></circle></svg>
+            <tr ${L.r.s(0, 1) /* data-column-id */}="${column.columnId}">
+                <td class="${L.r.s(0, 2) /* column-drag */}">
+                    <div class="${L.r.s(0, 3) /* drag-handle */}">
+                        ${L.r.s(0, 4) /* <svg width="20" height="100%" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="5" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="6" cy="19" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle><circle cx="18" cy="5" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle><circle cx="18" cy="19" r="1.5"></circle></svg> */}
                     </div>
                 </td>
-                <td class="column-enable">
-                    <input type="checkbox" data-column-name="${column.columnName}" ${column.visible ? "checked" : ""}>
+                <td class="${L.r.s(0, 5) /* column-enable */}">
+                    <input type="checkbox" ${L.r.s(0, 6) /* data-column-name */}="${column.columnName}" ${column.visible ? L.s(7, 3) /* checked */ : ""}>
                 </td>
-                <td class="column-name"><input class="input size-small" value="${column.columnName}" ${L.isPredefinedColumn(column.columnName) ? "readonly" : ""}></td>
-                <td class="column-type">
+                <td class="${L.r.s(0, 7) /* column-name */}"><input class="input size-small" value="${column.columnName}" ${L.isPredefinedColumn(column.columnName) ? "readonly" : ""}></td>
+                <td class="${L.r.s(0, 8) /* column-type */}">
                     <select ${L.isPredefinedColumn(column.columnName) ? "disabled" : ""}>
-                        <option value="text" ${column.columnType == "text" ? "selected" : ""}>Text</option>
-                        <option value="richtext" ${column.columnType == "richtext" ? "selected" : ""}>Rich text</option>
-                        <option value="number" ${column.columnType == "number" ? "selected" : ""}>Number</option>
-                        <option value="bool" ${column.columnType == "bool" ? "selected" : ""}>Yes/No</option>
-                        <option value="date" ${column.columnType == "date" ? "selected" : ""}>Date</option>
-                        <option value="time" ${column.columnType == "time" ? "selected" : ""}>Time</option>
-                        <option value="datetime" ${column.columnType == "datetime" ? "selected" : ""}>Date & time</option>
-                        <option disabled value="actions" ${column.columnType == "actions" ? "selected" : ""}>Actions</option>
+                        <option value="${L.r.s(0, 9) /* text */}" ${column.columnType == L.r.s(0, 9) /* text */ ? "selected" : ""}>${L.r.s(1, 0) /* Text */}</option>
+                        <option value="${L.r.s(1, 1) /* richtext */}" ${column.columnType == L.r.s(1, 1) /* richtext */ ? "selected" : ""}>${L.r.s(1, 2) /* Rich text */}</option>
+                        <option value="${L.r.s(1, 3) /* number */}" ${column.columnType == L.r.s(1, 3) /* number */ ? "selected" : ""}>${L.r.s(1, 4) /* Number */}</option>
+                        <option value="${L.r.s(1, 5) /* bool */}" ${column.columnType == L.r.s(1, 5) /* bool */ ? "selected" : ""}>${L.r.s(1, 6) /* Yes/No */}</option>
+                        <option value="${L.r.s(1, 7) /* date */}" ${column.columnType == L.r.s(1, 7) /* date */ ? "selected" : ""}>${L.r.s(1, 8) /* Date */}</option>
+                        <option value="${L.r.s(1, 9) /* time */}" ${column.columnType == L.r.s(1, 9) /* time */ ? "selected" : ""}>${L.r.s(2, 0) /* Time */}</option>
+                        <option value="${L.r.s(2, 1) /* datetime */}" ${column.columnType == L.r.s(2, 1) /* datetime */ ? "selected" : ""}>${L.r.s(2, 2) /* Date & time */}</option>
+                        <option disabled value="${L.r.s(2, 3) /* actions */}" ${column.columnType == "actions" ? "selected" : ""}>${L.r.s(2, 4) /* Actions */}</option>
                     </select>
                 </td>
                 <td class="ebacktesting-actions">
@@ -231,34 +212,19 @@ L.createSettingsUI = function (dialogContainer) {
         }
     });
 
-    $(`
-        <input type='checkbox' id='ebacktesting-option-AutoSnapshot' ${L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == 'true' ? "checked" : ""}>
-        <label for='ebacktesting-option-AutoSnapshot'>Auto capture trade snapshots</label>
-        <span title="Save into the eBacktesting journal panel automatic snapshots of the chart during and after a trade: when the position opens, when either TP or SL gets hit, when BE gets hit, or when the trade is manually closed." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
-        <br/>
-        <input type='checkbox' id='ebacktesting-option-CanModifyQty' ${L.session.getParameter(L.sessionParameterIds.CanModifyQty) == 'true' ? "checked" : ""}>
-        <label for='ebacktesting-option-CanModifyQty'>Allow modifying quantity</label>
-        <span title="Enable the ability to modify the quantity (lots) of each trade in the eBacktesting panel." class="icon-wrapper with-tooltip apply-common-tooltip iconWrapper default small" tabindex="-1"><span role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg></span></span>
-    `).appendTo(section);
-
     dialogContainer.find("button[name='submit']").on("click", () => {
-        L.session.setParameter(L.sessionParameterIds.MinReplayResolution, $("#ebacktesting-option-MinReplayResolution").val());
-        L.session.setParameter(L.sessionParameterIds.PreventHTFCandlePreviews, $("#ebacktesting-option-PreventHTFCandlePreviews").prop("checked").toString());
-        L.session.setParameter(L.sessionParameterIds.EnablePredefinedTimes, $("#ebacktesting-option-EnablePredefinedTimes").prop("checked").toString());
-        L.session.setParameter(L.sessionParameterIds.PredefinedTimes, $("#ebacktesting-option-PredefinedTimes").val());
-        L.session.setParameter(L.sessionParameterIds.EnableWarmupStart, $("#ebacktesting-option-EnableWarmupStart").prop("checked").toString());
-        L.session.setParameter(L.sessionParameterIds.WarmupStartOffset, $("#ebacktesting-option-WarmupStartOffset").val());
-        L.session.setParameter(L.sessionParameterIds.AnalysisTimer, $("#ebacktesting-option-AnalysisTimer").prop("checked").toString());
-        L.session.setParameter(L.sessionParameterIds.AutoSnapshot, $("#ebacktesting-option-AutoSnapshot").prop("checked").toString());
-        L.session.setParameter(L.sessionParameterIds.CanModifyQty, $("#ebacktesting-option-CanModifyQty").prop("checked").toString());
+        L.session.setParameter(L.sessionParameterIds.MinReplayResolution, $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -5) /* MinReplayResolution */}`).val());
+        L.session.setParameter(L.sessionParameterIds.PreventHTFCandlePreviews, $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -8) /* PreventHTFCandlePreviews */}`).prop(L.s(7, 3) /* checked */).toString());
+        L.session.setParameter(L.sessionParameterIds.AutoSnapshot, $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -2) /* AutoSnapshot */}`).prop(L.s(7, 3) /* checked */).toString());
+        L.session.setParameter(L.sessionParameterIds.CanModifyQty, $(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(9, -5) /* CanModifyQty*/}`).prop(L.s(7, 3) /* checked */).toString());
         L.selectResolution(0, 0);
         L.reflectReplayResolutions();
 
-        if (!$("#ebacktesting-option-PreventHTFCandlePreviews").prop("checked")) {
+        if (!$(`#${L.s(8, -4) /* ebacktesting-option */}-${L.s(8, -8) /* PreventHTFCandlePreviews */}`).prop(L.s(7, 3) /* checked */)) {
             L.stopSkipping();
         }
 
-        if ($("#ebacktesting-option-AnalysisTimer").prop("checked")) {
+        if ($(`#${L.s(8, -4) /* ebacktesting-option */}-AnalysisTimer`).prop(L.s(7, 3) /* checked */)) {
             $(".analysis-timer-separator").show();
             $(".ebacktesting-session-analysis-timer").show();
         } else {

@@ -46,7 +46,19 @@ L.openPosition = async function (position, shapeChartInfo, shape) {
         position.targetPrice(position.meta.currentTargetPrice = position.getShape().targetPrice, true);
         position.risk((position.entryPrice - position.stopPrice()) * position.quantity * position.symbol.meta.contractSize * position.entryCurrencyRate * position.symbol.meta.pointSize, true);
 
-        if(L.session.getParameter(L.sessionParameterIds.RiskWarning) == 'true') {
+        try {
+            const sl = position.stopPrice(undefined, true, 0);
+            const tp = position.targetPrice(undefined, true, 0);
+            const entry = position.entryPrice;
+            if (entry != null && sl != null && tp != null && entry !== sl) {
+                const rr = Math.abs(tp - entry) / Math.abs(entry - sl);
+                if (Number.isFinite(rr)) {
+                    position.columnValue("RR", Number(rr.toFixed(2)), true);
+                }
+            }
+        } catch(_e) { /* ignore RR init errors */ }
+
+        if(L.session.getParameter(L.sessionParameterIds.RiskWarning) == L.s(0, 6) /* true */) {
             setTimeout(() => {
                 var shapeRisk = shapeDataSourceProperties.risk.value();
                 if(shapeDataSourceProperties.riskDisplayMode.value() == 'money') {
@@ -55,17 +67,17 @@ L.openPosition = async function (position, shapeChartInfo, shape) {
                     shapeRisk = `${shapeRisk}%`;
                 }
 
-                L.messageBox("Your first eBacktesting trade", `Your new position has the risk quantity ${shapeRisk} (${position.getQuantity()} lots).\n\nThis can be adjusted from the settings of the position's drawing.`);
+                L.messageBox(L.s(1, -3) /* Your first eBacktesting trade */, L.s(1, -4, shapeRisk, position.getQuantity()) /* Your new position has the risk quantity of {0} ({1} lots).\n\nThis can be adjusted from the Risk setting of the position\'s drawing. */);
                 L.session.setParameter(L.sessionParameterIds.RiskWarning, 'false');
             }, 2000);
         } else  if (!L.isEbacktestingPanelOpen()) {
-            if(L.session.getParameter(L.sessionParameterIds.AutoOpenPanel) == 'true') {
+            if(L.session.getParameter(L.sessionParameterIds.AutoOpenPanel) == L.s(0, 6) /* true */) {
                 setTimeout(() => {
-                    $("button[data-name=replay_trading]").click();
+                    $(L.s(1, -5) /* button[data-name=replay_trading] */).click();
                     L.session.setParameter(L.sessionParameterIds.AutoOpenPanel, 'false');    
                 }, 2000);
             } else {
-                L.toast(`${position.getOrderType()} activated. You can open the eBacktesting panel to view and manage the position.`, 5000);
+                L.toast(L.s(1, -6, position.getOrderType()) /* {0} activated. You can open the eBacktesting panel to view and manage the position. */, 5000);
             }
         }
 
@@ -77,11 +89,11 @@ L.openPosition = async function (position, shapeChartInfo, shape) {
 
         await L.dataOps.createPosition(position);
         
-        if (L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == 'true') {
+        if (L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == L.s(0, 6) /* true */) {
             L.takeSnapshot(position);
         }
     } else {
-        L.toast("Unable to open position: lot size cannot be set at this time", 0, "warn");
+        L.toast(L.s(1, -7) /* Unable to open position: lot size cannot be set at this time */, 0, "warn");
         L.removeShapeById(position.getShape().shapeId, shapeChartInfo.chart);
     }
 }
@@ -120,7 +132,7 @@ L.closePosition = async function (position, exitReason, chart) {
         await L.dataOps.closePosition(position);
     }
 
-    if (L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == 'true') {
+    if (L.session.getParameter(L.sessionParameterIds.AutoSnapshot) == L.s(0, 6) /* true */) {
         L.takeSnapshot(position);
     }
 }
@@ -167,7 +179,7 @@ L.setPositionFunctions = function (position) {
         }
     }
 
-    position.stopPrice = function (value, dontStore) {
+    position.stopPrice = function (value, dontStore, index) {
         if (!position.positionSLs) {
             position.positionSLs = [];
         }
@@ -186,13 +198,13 @@ L.setPositionFunctions = function (position) {
         }
 
         if (position.positionSLs.length) {
-            return position.positionSLs[position.positionSLs.length - 1].sl;
+            return position.positionSLs[index === undefined ? position.positionSLs.length - 1 : index].sl;
         } else {
             return undefined;
         }
     };
 
-    position.targetPrice = function (value, dontStore) {
+    position.targetPrice = function (value, dontStore, index) {
         if (!position.positionTPs) {
             position.positionTPs = [];
         }
@@ -211,13 +223,13 @@ L.setPositionFunctions = function (position) {
         }
 
         if (position.positionTPs.length) {
-            return position.positionTPs[position.positionTPs.length - 1].tp;
+            return position.positionTPs[index === undefined ? position.positionTPs.length - 1 : index].tp;
         } else {
             return undefined;
         }
     };
 
-    position.bePrice = function (value, dontStore) {
+    position.bePrice = function (value, dontStore, index) {
         if (!position.positionBEs) {
             position.positionBEs = [];
         }
@@ -236,7 +248,7 @@ L.setPositionFunctions = function (position) {
         }
 
         if (position.positionBEs.length) {
-            return position.positionBEs[position.positionBEs.length - 1].be;
+            return position.positionBEs[index === undefined ? position.positionBEs.length - 1 : index].be;
         } else {
             return undefined;
         }
@@ -275,7 +287,7 @@ L.setPositionFunctions = function (position) {
     };
 
     position.getStatus = function () {
-        return position.exitTime ? `Exit ${position.getDirection()}` : "Open";
+        return position.exitTime ? `${L.s(1, -8) /* Exit */} ${position.getDirection()}` : L.s(1, -9) /* Open */;
     };
 
     position.getRisk = function (noRounding) {
@@ -287,7 +299,7 @@ L.setPositionFunctions = function (position) {
     };
 
     position.getOrderType = function () {
-        return position.quantity > 0 ? "Buy" : "Sell";
+        return position.quantity > 0 ? L.s(2, -1) /* Buy */ : L.s(2, -2) /* Sell */;
     };
 
     position.getEntryDate = function (chart) {
@@ -395,13 +407,29 @@ L.setPositionFunctions = function (position) {
     };
 
     position.getBERunUp = function (noRounding) {
-        const runup = Number(position.columnValue("BE Run-up")) || 0;
-        return Number(runup.toFixed(noRounding ? 100 : 2));
+        const beRunUp = Number(position.columnValue("BE Run-up")) || 0;
+        return Number(beRunUp.toFixed(noRounding ? 100 : 2));
     }
 
     position.getBERunUpPercentage = function (noRounding) {
-        const runup = position.columnValue("BE Run-up") || 0;
-        return Number((runup / position.meta.initialBalance * 100).toFixed(noRounding ? 100 : 2));
+        const beRunUp = position.columnValue("BE Run-up") || 0;
+        return Number((beRunUp / position.meta.initialBalance * 100).toFixed(noRounding ? 100 : 2));
+    }
+
+    position.getRR = function(noRounding) {
+        var rr = position.columnValue("RR");
+        if(!rr) {
+            try {
+                const sl = position.stopPrice(undefined, true, 0);
+                const tp = position.targetPrice(undefined, true, 0);
+                const entry = position.entryPrice;
+                if (entry != null && sl != null && tp != null && entry !== sl) {
+                    rr = Math.abs(tp - entry) / Math.abs(entry - sl);
+                }
+            } catch(_e) { return 0; }
+        }
+
+        return Number((Number(position.columnValue("RR")) || 0).toFixed(noRounding ? 100 : 2));
     }
 
     position.getLeverage = function() {
@@ -629,7 +657,7 @@ L.updatePosition = async function (position) {
             }
         }
     } else {
-        console.warn(`Position chart not found for symbol ${position.symbol.symbolName}`);
+        console.warn(L.s(2, -3, position.symbol.symbolName) /* Position chart not found for symbol {0} */);
     }
 
     async function parseBarAction(bar, previousBar, isLatestBar) {
@@ -666,7 +694,7 @@ L.detectExit = function (position, chart, bar, previousBar) {
 
         if (beHit) {
             position.meta.trackBeRunUp = true;
-            L.toast("BE hit, moving SL to entry", 2000);
+            L.toast(L.s(2, -4) /* BE hit, moving SL to entry */, 2000);
             L.stopSkipping();
             L.removeBeLine(position, chart);
             if(L.permissions.includes("CanSetBE")) {
@@ -682,7 +710,7 @@ L.detectExit = function (position, chart, bar, previousBar) {
                     L.takeSnapshot(position);
                 }
             } else {
-                L.toast("BE hit, but the auto-BE feature is disabled: please subscribe to a free plan or start a free trial on eBacktesting.com", 0, "warn");
+                L.toast(L.s(2, -5) /* BE hit, but the auto-BE feature is disabled: please subscribe to a free plan or start a free trial on eBacktesting.com */, 0, "warn");
             }
         }
     }
@@ -708,9 +736,9 @@ L.detectExit = function (position, chart, bar, previousBar) {
 
     if (position.exitPrice) {
         if(position.exitPrice == position.stopPrice()) {
-            L.toast("Stop loss hit", 2000, "warn");
+            L.toast(L.s(2, -6) /* Stop loss hit */, 2000, "warn");
         } else if(position.exitPrice == position.targetPrice()) {
-            L.toast("Take profit hit", 2000);
+            L.toast(L.s(2, -7) /* Take profit hit */, 2000);
         }
 
         position.exitTime = bar.time + chart.timeframeSeconds > L.session.currentDate ? L.session.currentDate : bar.time + chart.timeframeSeconds;
@@ -779,7 +807,7 @@ L.setStopPrice = function (position, price, immediate) {
                             L.getShapeById(position.meta.stopLineId, chart, true)?.setPoints(
                                 [{ price: position.stopPrice(), time: position.entryTime }]);
                         });
-                        L.toast("Invalid stop price", 3000, "warn");
+                        L.toast(L.s(2, -8) /* Invalid stop price */, 3000, "warn");
                     }
                     else {
                         position.stopPrice(price);
@@ -831,7 +859,7 @@ L.setTargetPrice = function (position, price) {
                             L.getShapeById(position.meta.targetLineId, chart, true)?.setPoints(
                                 [{ price: position.targetPrice(), time: position.entryTime }]);
                         });
-                        L.toast("Invalid target price", 3000, "warn");
+                        L.toast(L.s(2, -9) /* Invalid target price */, 3000, "warn");
                     }
                     else {
                         position.targetPrice(price);
@@ -874,7 +902,7 @@ L.setBePrice = function (position, price) {
                             L.getShapeById(position.meta.beLineId, chart, true)?.setPoints(
                                 [{ price: position.bePrice(), time: position.entryTime }]);
                         });
-                        L.toast("Invalid BE price", 3000, "warn");
+                        L.toast(L.s(3, -1) /* Invalid BE price */, 3000, "warn");
                     }
                     else {
                         position.bePrice(price);

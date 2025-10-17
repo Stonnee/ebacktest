@@ -1,5 +1,7 @@
 ﻿import { L } from "./ebacktesting.core.js";
 
+
+import "./ebacktesting.loc.js"
 import "./ebacktesting.candles.js"
 import "./ebacktesting.candles.monitor.js"
 import "./ebacktesting.charts.js"
@@ -19,7 +21,7 @@ import "./ebacktesting.positions.js"
 import "./ebacktesting.sessionchannel.js"
 import "./ebacktesting.sessions.js"
 import "./ebacktesting.stats.js"
-
+import "./ebacktesting.snapshots.js"
 /*
 --------------------------------------
 Operations UI
@@ -33,11 +35,11 @@ L.selectDate = async function (date, skipOffsetAlignment) {
         L.temporaryOffset();
     }
 
-    var currentDate = L.replayApi.currentDate().value();
-    await L.replayApi.selectDate(date);
+    var currentDate = L.r.currentDate().value();
+    await L.r.selectDate(date);
 
     L.selectDateStartTime = Date.now();
-    while (currentDate == L.replayApi.currentDate().value()) {
+    while (currentDate == L.r.currentDate().value()) {
         await L.delay(100);
         if((Date.now() - L.selectDateStartTime) > 10000) {
             break;
@@ -50,7 +52,7 @@ L.selectDate = async function (date, skipOffsetAlignment) {
 }
 
 L.selectDateWithWarmup = async function (timestamp) {
-    if (L.session.getParameter(L.sessionParameterIds.EnableWarmupStart) == "true") {
+    if (L.session.getParameter(L.sessionParameterIds.EnableWarmupStart) == L.s(0, 6) /* true */) {
         L.isWarmingUp = true;
 
         const symbolInfo = window.TradingViewApi.activeChart().chartModel().mainSeries().symbolInfo();
@@ -62,7 +64,7 @@ L.selectDateWithWarmup = async function (timestamp) {
         const completedIntervals = Math.floor(timeSinceSessionStart / warmupStartOffset);
         const lastWarmupTimeframeClose = sessionStart + completedIntervals * warmupStartOffset;
         
-        await L.selectDate(new Date(lastWarmupTimeframeClose * 1000));
+        await L.selectDate(new Date(lastWarmupTimeframeClose * 1000), true);
         do {
             await L.delay(1000);
         } while(!L.replayInitialized);
@@ -95,7 +97,7 @@ L.exit = function (force, showConfirmation) {
             L.confirmBox("Exit eBacktesting mode", "Do you want to exit eBacktesting mode and refresh chart?", (ok) => {
                 showConfirmation = ok;
                 if(ok) {
-                    L.replayApi.replayTimingMode().setValue("manual")
+                    L.r.replayTimingMode().setValue("manual")
                     L.messageBox("Saving chart", "Please wait a moment...");
                     saveService.saveExistentChart();
                 }
@@ -105,12 +107,12 @@ L.exit = function (force, showConfirmation) {
         if (showConfirmation) {
             L.confirmBox("Exit eBacktesting mode", "Do you want to exit eBacktesting mode and refresh chart?", (ok) => {
                 if (ok) {
-                    L.replayApi.replayTimingMode().setValue("manual")
+                    L.r.replayTimingMode().setValue("manual")
                     location.reload();
                 }
             });
         } else {
-            L.replayApi.replayTimingMode().setValue("manual")
+            L.r.replayTimingMode().setValue("manual")
             location.reload();
         }
     }
@@ -161,11 +163,11 @@ L.getReplayResolutions = async function () {
         return cached[1];
     }
 
-    var availableReplayResolutions = L.replayApi.replayResolutions().value().filter(r => r);
+    var availableReplayResolutions = L.r.replayResolutions().value().filter(r => r);
     L.getReplayResolutionsStartTime = Date.now();
     while (!availableReplayResolutions.length) {
         await L.delay(100);
-        availableReplayResolutions = L.replayApi.replayResolutions().value().filter(r => r);
+        availableReplayResolutions = L.r.replayResolutions().value().filter(r => r);
         if((Date.now() - L.getReplayResolutionsStartTime) > 10000) {
             break;
         }
@@ -189,8 +191,8 @@ L.selectResolution = async function (seconds, resolutionSelectionDelay) {
         }
     }
 
-    L.replayApi.changeReplayResolution(replayResolution);
-    L.replayApi.autoReplayResolution().setValue(replayResolution);
+    L.r.changeReplayResolution(replayResolution);
+    L.r.autoReplayResolution().setValue(replayResolution);
     if(resolutionSelectionDelay) {
         await L.delay(resolutionSelectionDelay);
     }
@@ -316,6 +318,29 @@ L.changeSymbol = async function (chart, symbolName) {
     }
 }
 
+L.cs = function (obj, i, j, ...params) {
+    const s = obj[i][j];
+    if (!s || s.indexOf("{") < 0) {
+        if(params.length === 0) {
+            return s;
+        } else {
+            throw "232";
+        }
+    } else {
+        return s.replace(/{(\d+)}/g, (match, index) => {
+            return typeof params[index] !== 'undefined' ? params[index] : match;
+        });
+    }
+}
+
+L.s = function (i, j, ...params) {
+    return L.cs(L, i, j, ...params);
+}
+
+L.r.s = function (i, j, ...params) {
+    return L.cs(L.r, i, j, ...params);
+}
+
 /*
 --------------------------------------
 Manage positions logic
@@ -338,6 +363,15 @@ L.monitorEntryShapes = function () {
             }
         }
     }, 100);
+}
+
+L.getPositionShapes = function (chart) {
+    if(!chart) {
+        chart = TradingViewApi.activeChart();
+    }
+    return chart.getAllShapes()
+        .filter(s => s.name == 'long_position' || s.name == 'short_position')
+        .map(s => L.getShapeById(s.id, chart, true));
 }
 
 L.generateEntryShapeCharts = function () {
@@ -749,7 +783,7 @@ L.removeShapeForPosition = function (position, ignoreErrors) {
 
 L.addCss();
 L.createToolbarButton();
-L.replayApi.replayTimingMode().setValue("manual")
+L.r.replayTimingMode().setValue("manual");
 L.toast("eBacktesting is ready. Start from the top toolbar when needed.", 3000);
 
 L.dataOps.getAddons().then(addons => {

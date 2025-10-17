@@ -12,11 +12,16 @@ L.onCurrentDateChange = function (currentTime) {
             if(!L.session.meta.isReviewMode) {
                 if (L.session.meta.dateIncrements.length > 10) {
                     const avg = L.session.meta.dateIncrements.reduce((a, b) => a + b, 0) / L.session.meta.dateIncrements.length;
-                    if (dateIncrement < avg * 1000) {
-                        L.session.meta.dateIncrements.push(dateIncrement);
-                    } else {
+                    if (dateIncrement < 0) {
                         updateSession = false;
-                        L.toast("An unusually large time jump was detected. If this was unintended, please exit eBacktesting at this point and restart the session.", 60000, "warn");
+                        L.session.meta.disableCurrentDateTracking = true;
+                        L.messageBox(L.s(0, 8) /* eBacktesting error */, L.s(0, 1, (dateIncrement / 60 / 60 / 24).toFixed(1)) /* An accidental backward time jump was detected ({0} days).\n\neBacktesting will exit at this point and restart the session. */ );
+                        L.exit(true, false);
+                    } else if (dateIncrement < avg * 100) {
+                        L.session.meta.dateIncrements.push(dateIncrement);
+                    } else if(dateIncrement > 3 * 60 * 60 * 24) {
+                        updateSession = false;
+                        L.messageBox(L.s(0, 2) /* Warning */ , L.s(0, 3, (dateIncrement / 60 / 60 / 24).toFixed(1)) /* An unusually large time jump was detected ({0} days).\n\nIf this was unintended, please exit eBacktesting at this point and restart the session. */ );
                         L.session.meta.disableCurrentDateTracking = true;
                     }
                 } else {
@@ -81,11 +86,11 @@ L.skipTime = async function (seconds, nonStop, resolutionSelectionDelay) {
 
     L.session.meta.canDetectEntries = true;
     L.isSkippingCandles = true;
-    $(".play-pause-button.play").hide();
-    $(".play-pause-button.pause").show();
+    $(L.s(0, 4) /* .play-pause-button.play */).hide();
+    $(L.s(0, 5) /* .play-pause-button.pause */).show();
 
     if(seconds) {
-        var currentTimestamp = L.replayApi.currentDate().value();
+        var currentTimestamp = L.r.currentDate().value();
         const minReplayResolution = await L.selectResolution(0, resolutionSelectionDelay);
 
         var skipBySeconds = L.resolutionToSeconds(minReplayResolution);
@@ -117,28 +122,32 @@ L.skipTime = async function (seconds, nonStop, resolutionSelectionDelay) {
             }
 
             // if (hasChart && currentTimestamp == targetTimestamp - seconds - 1) {
-            //     var chartResolution = await L.selectResolution(seconds, 1000); //this may cause indicators to reload. Check back in 6 months: 24-09-2025
+            //     var chartResolution = await L.selectResolution(seconds, 1000); //this may cause indicators to reload. Check back in: 24-02-2026
             //     skipBySeconds = L.resolutionToSeconds(chartResolution);
             // }
         }
 
         while (currentTimestamp + skipBySeconds <= targetTimestamp) {
             if (L.isSkippingCandles) {
-                await L.stepForward();
+                const stepped = await L.stepForward();
+                if (!stepped) {
+                    skipped = false;
+                    break;
+                }
             }
             else {
                 skipped = false;
                 break;
             }
 
-            currentTimestamp = L.replayApi.currentDate().value();
+            currentTimestamp = L.r.currentDate().value();
         }
     } else {
         await L.stepForward();
     }
 
-    $(".play-pause-button.play").show();
-    $(".play-pause-button.pause").hide();
+    $(L.s(0, 4) /* .play-pause-button.play */).show();
+    $(L.s(0, 5) /* .play-pause-button.pause */).hide();
     L.isSkippingCandles = false;
 
     return skipped;
@@ -146,16 +155,18 @@ L.skipTime = async function (seconds, nonStop, resolutionSelectionDelay) {
 
 L.stepForward = async function () {
     try {
-        await L.replayApi.doStep();
+        await L.r.doStep();
         L.keepSessionActive();
+        return true;
     } catch(e) {
-        L.exit(true, false);
+        // L.exit(true, false);
+        return false;
     }
 }
 
 L.startAutoplay = async function () {
-    if (L.replayApi.isAutoplayStarted().value()) {
-        L.replayApi.toggleAutoplay();
+    if (L.r.isAutoplayStarted().value()) {
+        L.r.toggleAutoplay();
     }
 
     if (!L.session.meta.autoplayStarted) {
@@ -169,24 +180,24 @@ L.startAutoplay = async function () {
 L.stopAutoPlay = function () {
     L.session.meta.autoplayStarted = false;
 
-    if (L.replayApi.isAutoplayStarted().value()) {
-        L.replayApi.toggleAutoplay();
+    if (L.r.isAutoplayStarted().value()) {
+        L.r.toggleAutoplay();
     }
 }
 
 L.startSkipping = function () {
     L.startAutoplay();
 
-    $(".play-pause-button.play").hide();
-    $(".play-pause-button.pause").show();
+    $(L.s(0, 4) /* .play-pause-button.play */).hide();
+    $(L.s(0, 5) /* .play-pause-button.pause */).show();
     L.session.meta.canDetectEntries = true;
 }
 
 L.stopSkipping = function () {
     L.stopAutoPlay();
 
-    $(".play-pause-button.pause").hide();
-    $(".play-pause-button.play").show();
+    $(L.s(0, 5) /* .play-pause-button.pause */).hide();
+    $(L.s(0, 4) /* .play-pause-button.play */).show();
     L.isSkippingCandles = false;
 }
 
@@ -195,11 +206,11 @@ L.stopAtPredefinedTime = async function () {
         return false;
     }
 
-    if(!(L.session.meta.autoplayStarted || L.replayApi.isAutoplayStarted().value())) {
+    if(!(L.session.meta.autoplayStarted || L.r.isAutoplayStarted().value())) {
         return false;
     }
 
-    if(L.session.getParameter(L.sessionParameterIds.EnablePredefinedTimes) != "true") {
+    if(L.session.getParameter(L.sessionParameterIds.EnablePredefinedTimes) != L.s(0, 6) /* true */) {
         return false;
     }
 
@@ -209,7 +220,7 @@ L.stopAtPredefinedTime = async function () {
 
     var isNearPredefinedTime = false;
 
-    const predefinedTimes = L.session.getParameter(L.sessionParameterIds.PredefinedTimes).split(",").map(t => t.trim()).filter(t => t.length > 0);
+    const predefinedTimes = L.session.getParameter(L.sessionParameterIds.PredefinedTimes).split(L.s(0, 7) /* , */).map(t => t.trim()).filter(t => t.length > 0);
     const chart = L.getCharts()[0];
 
     var minResolution = L.session.getParameter(L.sessionParameterIds.MinReplayResolution);
@@ -226,7 +237,7 @@ L.stopAtPredefinedTime = async function () {
     if (predefinedTimes.length > 0) {
         for (const time of predefinedTimes) {
             if (formattedLastKnownBarTime < time && time <= formattedLatestBarTime) {
-                L.toast(`Auto stopping candle playback at ${time}`, 3000);
+                L.toast(L.s(0, 0, time) /* Auto stopping candle playback at {0} */, 3000);
                 L.stopSkipping();
                 L.session.meta.autoStopRetries = 5;
                 L.asyncInterval(async () => {

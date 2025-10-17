@@ -6,11 +6,11 @@ L.startSession = async function (sessionId) {
 
     L.removeGeneratedShapes();
     
-    $("button#header-toolbar-replay").hide();
-    $("button#header-toolbar-replay").next("div[class*='wrapper']:has(div[class*='arrow'])").hide();
+    $(L.s(3, -2) /* button#header-toolbar-replay */).hide();
+    $(L.s(3, -2) /* button#header-toolbar-replay */).next("div[class*='wrapper']:has(div[class*='arrow'])").hide();
 
-    $("button#header-toolbar-ebacktesting").attr("aria-pressed", true);
-    $("button#header-toolbar-ebacktesting").addClass("isActive");
+    $(L.s(3, -3) /* button#header-toolbar-ebacktesting */).attr("aria-pressed", true);
+    $(L.s(3, -3) /* button#header-toolbar-ebacktesting */).addClass("isActive");
     $("head").append(`<style>div.chart-toolbar.chart-controls-bar button[data-name="time-zone-menu"] div.js-button-text {display:none}</style>`);
 
     L.session = await L.dataOps.getSession(sessionId);
@@ -38,35 +38,35 @@ L.startSession = async function (sessionId) {
             await L.delay(1000);
         }
 
-        L.replayApi.isReplayStarted().unsubscribe(onReplayMode);
-        L.tryExec(() => L.replayApi._replayUIController.tradingUIController().destroy(), true);
+        L.r.isReplayStarted().unsubscribe(onReplayMode);
+        L.tryExec(() => L.r._replayUIController.tradingUIController().destroy(), true);
         const switchToMinReplayResolution = function (replayResolutions) {
             replayResolutions = replayResolutions.filter(r => r);
             if (replayResolutions.length > 0) {
-                L.replayApi.changeReplayResolution(replayResolutions.find(r => L.resolutionToSeconds(r) >= 60) || replayResolutions[0]);
-                L.replayApi.replayResolutions().unsubscribe(switchToMinReplayResolution);
+                L.r.changeReplayResolution(replayResolutions.find(r => L.resolutionToSeconds(r) >= 60) || replayResolutions[0]);
+                L.r.replayResolutions().unsubscribe(switchToMinReplayResolution);
             }
         };
 
-        L.replayApi.replayResolutions().subscribe(switchToMinReplayResolution);
+        L.r.replayResolutions().subscribe(switchToMinReplayResolution);
 
         L.createUI();
         L.asyncInterval(async () => {
             L.createReplayControls();
             L.createPositionsListHeader();
 
-            const replayTradingButton = $("button[data-name='replay_trading']");
-            replayTradingButton.attr("aria-label", replayTradingButton.attr("data-active") == "true" ? "Close eBacktesting" : "Open eBacktesting");
-            replayTradingButton.attr("data-tooltip", replayTradingButton.attr("data-active") == "true" ? "Close eBacktesting" : "Open eBacktesting");
+            const replayTradingButton = $(L.s(1, -5) /* button[data-name=replay_trading] */);
+            replayTradingButton.attr("aria-label", replayTradingButton.attr("data-active") == L.s(0, 6) /* true */ ? L.s(3, -4) /* Close eBacktesting */ : L.s(3, -5) /* Open eBacktesting */);
+            replayTradingButton.attr("data-tooltip", replayTradingButton.attr("data-active") == L.s(0, 6) /* true */ ? L.s(3, -4) /* Close eBacktesting */ : L.s(3, -5) /* Open eBacktesting */);
         }, 1000);
 
-        L.replayApi.currentDate().subscribe(L.onCurrentDateChange);
-
+        L.r.currentDate().subscribe(L.onCurrentDateChange);
+            
         setInterval(() => {
-            L.tryExec(() => { L.replayApi.changeAutoplayDelay(1000); }, true);
+            L.tryExec(() => { L.r.changeAutoplayDelay(1000); }, true);
                 
             setTimeout(() => {
-                L.tryExec(() => { L.replayApi.changeAutoplayDelay(100); }, true);
+                L.tryExec(() => { L.r.changeAutoplayDelay(100); }, true);
             }, 1000);
         }, 10000);
 
@@ -79,9 +79,9 @@ L.startSession = async function (sessionId) {
             if (currentTime - L.session.meta.autoplayDelayChangeDate > 10) {
                 L.session.meta.autoplayDelayChangeDate = currentTime;
                 L.tryExec(() => {
-                    L.replayApi.changeAutoplayDelay(1000);
+                    L.r.changeAutoplayDelay(1000);
                     setTimeout(() => {
-                        L.replayApi.changeAutoplayDelay(100);
+                        L.r.changeAutoplayDelay(100);
                     }, 2000);
                 }, true);
             }
@@ -122,11 +122,16 @@ L.startSession = async function (sessionId) {
         chartModel.watermarkSource().properties().childs().replay.setValue(false);
     });
 
-    L.replayApi.replayMode().setValue("AllCharts");
-    L.replayApi.replayResolutions().subscribe(resolutions => L.reflectReplayResolutions(resolutions.filter(r => r)));
-    L.replayApi.isReplayStarted().subscribe(onReplayMode);
+    L.r._replayUIController._ignoreReplayStateRestoring = true;
+    // L.r._replayUIController._chartWidgetCollection.updateReplaySessionState(null)
+    // L.r._replayUIController._chartWidgetCollection.updateReplaySessionState = function (_state) { /* disabled */ };
+    // L.r._replayUIController._chartWidgetCollection.replaySessionState = function () { return null; };
+
+    L.r.replayMode().setValue("AllCharts");
+    L.r.replayResolutions().subscribe(resolutions => L.reflectReplayResolutions(resolutions.filter(r => r)));
+    L.r.isReplayStarted().subscribe(onReplayMode);
     if (L.session.getParameter(L.sessionParameterIds.EnableWarmupStart) == "true") {
-        L.toast("Warmup: playing candles to where you left off to prevent candle previews...", 5000)
+        L.toast(L.s(3, -6) /* Warmup: playing candles to where you left off to prevent candle previews... */, 5000)
     }
 
     var timeNow = new Date();
@@ -140,15 +145,17 @@ L.startSession = async function (sessionId) {
     adjustedDateTime.setMinutes(adjustedDateTime.getMinutes() - offsetMinutes);
     
     await L.selectDateWithWarmup(L.session.currentDate);
-    L.toast("Session synced to last active time. You can now open the eBacktesting journal panel below to view your trades.", 10000);
+    if(!L.isEbacktestingPanelOpen()) {
+        L.toast(L.s(3, -7) /* Session synced to last active time. You can now open the eBacktesting journal panel below to view your trades. */, 10000);
+    }
 
     setTimeout(() => {
         if (L.session.getParameter(L.sessionParameterIds.ShowOpenPositionTip) != "false") {
-            TradingViewApi.activeChart().createAnchoredShape({ x: 0.1, y: 0.3 }, { shape: "anchored_text", text: `Quick tip:\nTo enter a position, simply \n- draw a Long Position or Short Position on the chart\n- double click to set its risk percentage or ${L.session.currencyId}\n- and start playing some candles`, overrides: { color: "white", backgroundColor: "rgb(0,0,0)", backgroundTransparency: 1, fillBackground: true, fontsize: 18 } })
+            TradingViewApi.activeChart().createAnchoredShape({ x: 0.1, y: 0.3 }, { shape: "anchored_text", text: L.s(3, -9, L.session.currencyId) /* Quick tip:\nTo enter a position, simply \n- draw a Long Position or Short Position on the chart\n- double click to set its risk percentage or {0}\n- and start playing some candles */, overrides: { color: "white", backgroundColor: "rgb(0,0,0)", backgroundTransparency: 1, fillBackground: true, fontsize: 18 } })
             L.session.setParameter(L.sessionParameterIds.ShowOpenPositionTip, "false");
         } else {
             if(L.user.plan.planId.toUpperCase() != L.dataOps.plans.full.planId) {
-                L.toast("All eBacktesting features are open, regardless of plan, while eBacktesting is in early stage");
+                L.toast(L.s(3, -8) /* All eBacktesting features are open, regardless of plan, while eBacktesting is in early stage */);
             }
         }
     }, 10000);
@@ -165,7 +172,7 @@ L.updateSessionCapitalInfo = function () {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-        $(".ebacktesting-session-balance-balance-value").text(balanceValue);
+        $(`.${L.s(4, -1) /* ebacktesting-session-balance-balance-value */}`).text(balanceValue);
 
         if (L.session.meta.equity !== undefined) {
             const equityValue = L.session.meta.equity
@@ -173,16 +180,16 @@ L.updateSessionCapitalInfo = function () {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
-            $(".ebacktesting-session-balance-equity-value").text(equityValue);
+            $(`.${L.s(4, -2) /* ebacktesting-session-balance-equity-value */}`).text(equityValue);
         }
 
         if (L.session.getActivePositions().length == 0) {
-            $(".ebacktesting-session-balance-equity").hide();
+            $(`.${L.s(4, -3) /* ebacktesting-session-balance-equity */}`).hide();
         } else {
-            $(".ebacktesting-session-balance-equity").show();
+            $(`.${L.s(4, -3) /* ebacktesting-session-balance-equity */}`).show();
         }
 
-        $(".ebacktesting-stats-button")
+        $(`.${L.s(4, -4) /* ebacktesting-stats-button */}`)
             .attr("aria-label", L.getStatsSummary())
             .attr("data-tooltip", L.getStatsSummary());
         

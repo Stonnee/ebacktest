@@ -458,12 +458,12 @@ L.addCss = function () {
             right: 0;
             bottom: 0;
             width: 100%;
-            height: calc(100% - 60px);
+            height: calc(100% - 10px);
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             text-align: center;
             color: white;
-            padding-top: 60px;
+            padding-top: 10px;
             backdrop-filter: blur(20px);
             overflow-y: auto;
         }
@@ -475,7 +475,7 @@ L.addCss = function () {
             color: white;
             background-repeat: no-repeat;
             background-size: 150px;
-            min-height: 150px;
+            min-height: 350px;
             background-position: center;
         }
         .snapshot-viewer-image-container img {
@@ -484,24 +484,26 @@ L.addCss = function () {
             border: 1px solid white;
         }
         .snapshot-viewer-info {
-            display: inline-block;
-            margin: 5px;
-            font-size: 1.3em;
             line-height: 1.5em;
+            display: inline-block;
         }
         .snapshot-viewer-url {
             color: #c2ffeb;
-            font-size: 0.8em;
         }
         .snapshot-viewer-time {
             color:rgba(194, 255, 235, 0.72);
-            font-size: 0.8em;
         }
         .snapshot-viewer-button {
             cursor: pointer !important;
             padding: 10px;
             margin: 10px;
             color: white !important;
+            --ui-lib-light-button-content-max-lines: 1;
+        }
+        .snapshot-viewer-counter {
+            display: inline-block;
+            position: relative;
+            top: -5px;
         }
         .snapshot-viewer-close-button {
             float: right;
@@ -516,6 +518,12 @@ L.addCss = function () {
         }
         .snapshot-viewer-delete-button {
             float: left;
+        }
+        .snapshot-viewer-copy-url {
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            top: 5px;
         }
 
         .ebacktesting-session-balance, .ebacktesting-session-analysis-timer {
@@ -596,17 +604,21 @@ L.addCss = function () {
             line-height: 1em;
         }
         .ebacktesting-dialog-table tr {
-            height: 34px;
+            height: 32px;
         }
         .ebacktesting-dialog-table td.ebacktesting-actions {
             text-align: center;
-            padding: 5px;
+            padding-left: 5px;
         }
         .ebacktesting-dialog-table td button[disabled] {
             opacity: 0.3;
         }
         .ebacktesting-dialog-table td.column-drag {
             text-align: left;
+        }
+
+        .ebacktesting-dialog-section-sessions button {
+            --ui-lib-light-button-content-max-lines: 1;
         }
 
         .ebacktesting-dialog-section-sessions .intro {
@@ -704,6 +716,7 @@ L.addCss = function () {
         .ebacktesting-dialog-section.predefined-times {
             grid-column: 1 / -1;
             display: grid;
+            margin-bottom: 10px;
         }
         .ebacktesting-dialog-section.predefined-times .ebacktesting-dialog-table {
             margin-top: 5px;

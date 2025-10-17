@@ -1,0 +1,340 @@
+﻿import { L } from "./ebacktesting.core.js";
+
+for (const i of [...Array(10).keys(), ...Array.from({ length: 9 }, (_, k) => -k - 1)]) { L[i] ??= {}; L.r[i] ??= {}};
+
+L[0][0] = "Auto stopping candle playback at {0}";
+L[0][1] = "An accidental backward time jump was detected ({0} days).\n\neBacktesting will exit at this point and restart the session.";
+L[0][2] = "Warning";
+L[0][3] = "An unusually large time jump was detected ({0} days).\n\nIf this was unintended, please exit eBacktesting at this point and restart the session.";
+L[0][4] = ".play-pause-button.play";
+L[0][5] = ".play-pause-button.pause";
+L[0][6] = "true";
+L[0][7] = ",";
+L[0][8] = "eBacktesting error";
+L[0][9] = "#eBacktestingCurrentDate";
+
+L[1][0] = "getCharts-true";
+L[1][1] = "getCharts-false";
+L[1][2] = "Chart not found while trying to get position chart";
+L[1][3] = "Chart not found while trying to remove shape";
+L[1][4] = "getCharts-{0}";
+L[1][5] = "admin/user/{0}";
+L[1][6] = "admin/user";
+L[1][7] = "admin/plans/{0}/permissions";
+L[1][8] = "journaling/session-columns/{0}";
+L[1][9] = "journaling/positions/columns/{0}";
+
+L[2][0] = "journaling/positions/columns/{0}";
+L[2][1] = "backtesting/sessions";
+L[2][2] = "backtesting/sessions/{0}";
+L[2][3] = "getSessionPositions-{0}";
+L[2][4] = "backtesting/sessions?allowPastDate={0}";
+L[2][5] = "backtesting/sessions/{0}/clone?newName={1}";
+L[2][6] = "backtesting/sessions/{0}/parameters";
+L[2][7] = "backtesting/sessions/{0}/parameters/{1}";
+L[2][8] = "getOrAddSymbol-{0}";
+L[2][9] = "backtesting/symbols/{0}";
+
+L[3][0] = "backtesting/symbols";
+L[3][1] = "getSymbolRuleContractSizes-{0}";
+L[3][2] = "backtesting/symbol-rule-contract-sizes/{0}";
+L[3][3] = "getSessionPositions-{0}";
+L[3][4] = "backtesting/positions/{0}";
+L[3][5] = "backtesting/positions";
+L[3][6] = "backtesting/positions/close";
+L[3][7] = "backtesting/positions/be/{0}";
+L[3][8] = "backtesting/positions/risk/{0}";
+L[3][9] = "backtesting/positions/sl/{0}";
+
+L[4][0] = "backtesting/positions/tp/{0}";
+L[4][1] = "backtesting/positions/shapes/{0}";
+L[4][2] = "backtesting/positions/shapes/{0}";
+L[4][3] = "journaling/positions/snapshots/{0}";
+L[4][4] = "backtesting/sessions/{0}/symbols/{1}/last-price";
+L[4][5] = "backtesting/positions/{0}/quantity";
+L[4][6] = "journaling/export/excel/{0}";
+L[4][7] = "ui/addons";
+L[4][8] = "https://api.ebacktesting.com/{0}";
+L[4][9] = "getUTCOffsetInMinutes-{0}-{1}";
+
+L[5][0] = "toTradingViewDateTimeFormat-{0}-{1}";
+L[5][1] = "T";
+L[5][2] = "S";
+L[5][3] = "h";
+L[5][4] = "D";
+L[5][5] = "W";
+L[5][6] = "M";
+L[5][7] = "div[class*='tabs']";
+L[5][8] = "span[class*='editIcon']";
+L[5][9] = "div[class*='scrollable'] div[class*='content']";
+
+L[6][0] = "div[class*='footer']";   
+L[6][1] = "span[role='button'][data-role='listbox']";
+L[6][2] = ".select-analysis-time-button";
+L[6][3] = "button[name='cancel']";
+L[6][4] = "ebacktesting-dialog-table";
+L[6][5] = "analysis-timespan";
+L[6][6] = "ebacktesting-actions";
+L[6][7] = "select-analysis-time-button";
+L[6][8] = "Add to journal";
+L[6][9] = "predefined-times";
+
+L[7][0] = "ebacktesting-dialog-section";
+L[7][1] = "Predefined times";
+L[7][2] = "ebacktesting-option-EnablePredefinedTimes";
+L[7][3] = "checked";
+L[7][4] = "tbody tr input[type='time']";
+L[7][5] = "ebacktesting-option-EnableWarmupStart";
+L[7][6] = "ebacktesting-option-WarmupStartOffset";
+L[7][7] = "goto-time";
+L[7][8] = "Next occurrence";
+L[7][9] = "delete-time";
+
+L[8][0] = "Delete";
+L[8][1] = "Playing warmup candles near the specified time to prevent candle previews";
+L[8][2] = "Could not find next valid market session for the specified time";
+L[8][3] = "Cannot go to the specified time while there are open positions";
+L[8][4] = "Add new time";
+L[8][5] = "00:00";
+L[8][6] = "ebacktesting-dialog-options-section-custom-date";
+L[8][7] = "custom-date-time";
+L[8][8] = "Or, go to a custom date/time";
+L[8][9] = "Warming up candles to the specified date/time to prevent candle preview...";
+
+L[9][0] = "Usage info";
+L[9][1] = "Cannot go to the specified date/time while there are open positions. Please close all positions before jumping to another date.";
+L[9][2] = "The selected date/time must be in the future.";
+L[9][3] = "ebacktesting-dialog-options-section";
+L[9][4] = "Stop playback/skipping at predefined times";
+L[9][5] = "Automatically stops candle playback at specified times during the day. Useful for regular events like session opens, news releases or your own schedule.";
+L[9][6] = "Warmup jump-to-date";
+L[9][7] = "300";
+L[9][8] = "900";
+L[9][9] = "1800";
+
+L[-1][0] = "3600";
+L[-1][1] = "7200";
+L[-1][2] = "14400";
+L[-1][3] = "86400";
+L[-1][4] = "5m";
+L[-1][5] = "15m";
+L[-1][6] = "30m";
+L[-1][7] = "1h";
+L[-1][8] = "2h";
+L[-1][9] = "4h";
+
+L[-2][0] = "1D";
+L[-2][1] = "When jumping to a specific time, a brief playback will take place just before that time to load indicators and prevent seeing future price action (by default, TradingView displays the full candle when navigating to a time that is mid-candle).";
+L[-2][2] = "button[name='submit']";
+L[-2][3] = "ebacktesting-prompt-dialog";
+L[-2][4] = "ebacktesting-prompt-dialog-content";
+L[-2][5] = "OK";
+L[-2][6] = "Cancel";
+L[-2][7] = "eBacktesting";
+L[-2][8] = "Go to Date/Time";
+L[-2][9] = "Analysis Times";
+
+L[-3][0] = "emoji";
+L[-3][1] = "Close";
+L[-3][2] = '<div class="discord-cta">Need help? Join the <a href="https://discord.gg/kJSmwSxBpW">eBacktesting Discord</a> community!</div>';
+L[-3][3] = "ebacktesting-dialog-section-sessions";
+L[-3][4] = "intro";
+L[-3][5] = 'Please ensure your <a href="https://eBacktesting.com" target="_blank">eBacktesting.com</a> subscription plan is active for your TradingView username: <span contenteditable readonly spellcheck="false">{0}</span>';
+L[-3][6] = '<svg class="ebacktesting-loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M13.88 3.88a1.88 1.88 0 1 1-3.76 0 1.88 1.88 0 0 1 3.76 0ZM12 18.24A1.88 1.88 0 1 0 12 22a1.88 1.88 0 0 0 0-3.75Zm8.13-8.13a1.88 1.88 0 1 0 0 3.76 1.88 1.88 0 0 0 0-3.76ZM5.74 12A1.88 1.88 0 1 0 2 12a1.88 1.88 0 0 0 3.75 0Zm.5 3.87a1.88 1.88 0 1 0 0 3.75 1.88 1.88 0 0 0 0-3.75Zm11.5 0a1.88 1.88 0 1 0 0 3.75 1.88 1.88 0 0 0 0-3.75ZM6.25 4.38a1.87 1.87 0 1 0 0 3.75 1.87 1.87 0 0 0 0-3.75Z"></path></svg>';
+L[-3][7] = '<table class="ebacktesting-dialog-table ebacktesting-sessions-table">';
+L[-3][8] = "tr[data-session-id='{0}'] .positions-counter";
+L[-3][9] = "tr[data-session-id='{0}'] .session-balance";
+
+L[-4][0] = "data-session-id='{0}'";
+L[-4][1] = "selected-session";
+L[-4][2] = "session-section";
+L[-4][3] = "Session";
+L[-4][4] = "session-name";
+L[-4][5] = "Chart date";
+L[-4][6] = "session-bar-date";
+L[-4][7] = "Set another backtesting date";
+L[-4][8] = "initial-value";
+L[-4][9] = "Balance";
+
+L[-5][0] = "session-capital";
+L[-5][1] = "session-balance";
+L[-5][2] = "session-stats-info";
+L[-5][3] = "positions-counter";
+L[-5][4] = "Positions";
+L[-5][5] = "Last update";
+L[-5][6] = "resume-session";
+L[-5][7] = "Resume session";
+L[-5][8] = 'Go &nbsp; <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm-1.17 5.79 3.05 2.92H6.52a.97.97 0 0 0-.97.97v.64c0 .54.43.97.97.97h7.36l-3.05 2.92c-.39.37-.4 1-.01 1.38l.44.44c.38.38 1 .38 1.37 0l5.35-5.34c.38-.38.38-1 0-1.37l-5.35-5.36a.96.96 0 0 0-1.37 0l-.44.44a.97.97 0 0 0 .01 1.39Z"></path></svg>';
+L[-5][9] = "delete-session";
+
+L[-6][0] = "Delete session";
+L[-6][1] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M12 4h3v1h-1.04l-.88 9.64a1.5 1.5 0 0 1-1.5 1.36H6.42a1.5 1.5 0 0 1-1.5-1.36L4.05 5H3V4h3v-.5C6 2.67 6.67 2 7.5 2h3c.83 0 1.5.67 1.5 1.5V4ZM7.5 3a.5.5 0 0 0-.5.5V4h4v-.5a.5.5 0 0 0-.5-.5h-3ZM5.05 5l.87 9.55a.5.5 0  0 0 .5.45h5.17a.5.5 0 0 0 .5-.45L12.94 5h-7.9Z"></path></svg>';
+L[-6][2] = "ebacktesting-session-settings-add-new-session-container";
+L[-6][3] = "ebacktesting-dialog-section-plan";
+L[-6][4] = "Active plan";
+L[-6][5] = "ebacktesting-loader";
+L[-6][6] = "New session";
+L[-6][7] = "data-session-id";
+L[-6][8] = "My eBacktesting session";
+L[-6][9] = "Select a backtesting date";
+
+L[-7][0] = "session-capital-value";
+L[-7][1] = "Capital";
+L[-7][2] = "100000";
+L[-7][3] = "session-capital-currency";
+L[-7][4] = "USD";
+L[-7][5] = "EUR";
+L[-7][6] = "GBP";
+L[-7][7] = "JPY";
+L[-7][8] = "CHF";
+L[-7][9] = "CAD";
+
+L[-8][0] = "CHF";
+L[-8][1] = "HKD";
+L[-8][2] = "JPY";
+L[-8][3] = "NOK";
+L[-8][4] = "RUB";
+L[-8][5] = "SEK";
+L[-8][6] = "SGD";
+L[-8][7] = "TRY";
+L[-8][8] = "ZAR";
+L[-8][9] = "BTC";
+
+L[-9][0] = "ETH";
+L[-9][1] = "MYR";
+L[-9][2] = "KRW";
+L[-9][3] = "USDT";
+L[-9][4] = "INR";
+L[-9][5] = "save-session";
+L[-9][6] = "Please enter a session name.";
+L[-9][7] = "There is already a session with this name.";
+L[-9][8] = "Please enter a valid capital amount.";
+L[-9][9] = "cancel-session";
+
+L[0][-1] = 'Cannot create multiple sessions: please subscribe to a free plan or start a free trial on eBacktesting.com';
+L[0][-2] = 'Please enter a session name.';
+L[0][-3] = 'There is already a session with this name.';
+L[0][-4] = 'Unable to change the replay date: some positions would be still open at that date. Please close all positions before changing the date.';
+L[0][-5] = 'Unable to change the replay date: there is an open position in this session.';
+L[0][-6] = 'Cannot resume an existing session: please subscribe to a plan or start a free trial on eBacktesting.com';
+L[0][-7] = 'Are you sure you want to delete this session?';
+L[0][-8] = 'Clone this session (with positions)?';
+L[0][-9] = '<span class="ebt-spin" title="Cloning…"></span>';
+
+L[1][-1] = 'Copy of';
+L[1][-2] = 'Clone session failed';
+L[1][-3] = 'Your first eBacktesting trade';
+L[1][-4] = 'Your new position has the risk quantity of {0} ({1} lots).\n\nThis can be adjusted from the Risk setting of the position\'s drawing.';
+L[1][-5] = 'button[data-name=replay_trading]';
+L[1][-6] = '{0} activated. You can open the eBacktesting panel to view and manage the position.';
+L[1][-7] = 'Unable to open position: lot size cannot be set at this time';
+L[1][-8] = 'Exit';
+L[1][-9] = 'Open';
+
+L[2][-1] = 'Buy';
+L[2][-2] = 'Sell';
+L[2][-3] = 'Position chart not found for symbol {0}';
+L[2][-4] = 'BE hit, moving SL to entry';
+L[2][-5] = 'BE hit, but the auto-BE feature is disabled: please subscribe to a free plan or start a free trial on eBacktesting.com';
+L[2][-6] = 'Stop loss hit';
+L[2][-7] = 'Take profit hit';
+L[2][-8] = 'Invalid stop price';
+L[2][-9] = 'Invalid target price';
+
+L[3][-1] = 'Invalid BE price';
+L[3][-2] = 'button#header-toolbar-replay';
+L[3][-3] = 'button#header-toolbar-ebacktesting';
+L[3][-4] = 'Close eBacktesting';
+L[3][-5] = 'Open eBacktesting';
+L[3][-6] = 'Warmup: playing candles to where you left off to prevent candle previews...';
+L[3][-7] = 'Session synced to last active time. You can now open the eBacktesting journal panel below to view your trades.';
+L[3][-8] = 'All eBacktesting features are open, regardless of plan, while eBacktesting is in early stage';
+L[3][-9] = 'Quick tip:\nTo enter a position, simply \n- draw a Long Position or Short Position on the chart\n- double click to set its risk percentage or {0}\n- and start playing some candles';
+
+L[4][-1] = 'ebacktesting-session-balance-balance-value';
+L[4][-2] = 'ebacktesting-session-balance-equity-value';
+L[4][-3] = 'ebacktesting-session-balance-equity';
+L[4][-4] = 'ebacktesting-stats-button';
+L[4][-5] = 'snapshot-viewer';
+L[4][-6] = 'snapshot-viewer-image-container';
+L[4][-7] = 'snapshot-viewer-counter';
+L[4][-8] = 'snapshot-viewer-info';
+L[4][-9] = 'snapshot-viewer-url';
+
+L[5][-1] = 'snapshot-viewer-time';
+L[5][-2] = 'view-snapshots-button';
+L[5][-3] = 'data-snapshots';
+L[5][-4] = 'View {0}snapshot{1}';
+L[5][-5] = 'snapshot-viewer-button';
+L[5][-6] = 'snapshot-viewer-close-button';
+L[5][-7] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path stroke="currentColor" stroke-width="1.2" d="m1.5 1.5 15 15m0-15-15 15"></path></svg>';
+L[5][-8] = 'snapshot-viewer-delete-button';
+L[5][-9] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M12 4h3v1h-1.04l-.88 9.64a1.5 1.5 0 0 1-1.5 1.36H6.42a1.5 1.5 0 0 1-1.5-1.36L4.05 5H3V4h3v-.5C6 2.67 6.67 2 7.5 2h3c.83 0 1.5.67 1.5 1.5V4ZM7.5 3a.5.5 0 0 0-.5.5V4h4v-.5a.5.5 0 0 0-.5-.5h-3ZM5.05 5l.87 9.55a.5.5 0 0 0 .5.45h5.17a.5.5 0 0 0 .5-.45L12.94 5h-7.9Z"></path></svg>';
+
+L[6][-1] = 'snapshot-viewer-image-container';
+L[6][-2] = 'Snapshot';
+L[6][-3] = 'snapshot-viewer-nav-button';
+L[6][-4] = 'snapshot-viewer-prev';
+L[6][-5] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="1.2" d="M17 22.5 6.85 12.35a.5.5 0 0 1 0-.7L17 1.5"></path></svg>';
+L[6][-6] = 'snapshot-viewer-copy-url';
+L[6][-7] = 'Previous';
+L[6][-8] = 'Copy chart link';
+L[6][-9] = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g fill="none" fill-rule="evenodd" stroke="currentColor"><path d="M13.111 18.5H10.5a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-8.389z"></path><path d="M18.5 20v1.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1H8"></path></g></svg>';
+
+L[7][-1] = 'snapshot-viewer-time';
+L[7][-2] = 'snapshot-viewer-next';
+L[7][-3] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"><g transform="scale(-1,1) translate(-24,0)"><path stroke="currentColor" stroke-linecap="round" stroke-width="1.2" d="M17 22.5 6.85 12.35a.5.5 0 0 1 0-.7L17 1.5"></path></g></svg>';
+L[7][-4] = 'Copied!';
+L[7][-5] = 'Copy failed';
+L[7][-6] = 'Could not copy snapshot URL to clipboard.';
+L[7][-7] = 'ArrowLeft';
+L[7][-8] = 'ArrowRight';
+L[7][-9] = 'Escape';
+
+L[8][-1] = 'Delete';
+L[8][-2] = 'ebacktesting-dialog-section-title';
+L[8][-3] = 'Options';
+L[8][-4] = 'ebacktesting-option';
+L[8][-5] = 'MinReplayResolution';
+L[8][-6] = "The minimum replay interval when clicking the step forward button (Shift + ⇨). When skipping candles, all increments are based on this interval. By default, it's the minimum supported by your TradingView subscription plan.";
+L[8][-7] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16Zm1-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM8.5 9.5H7V8h3v6H8.5V9.5Z"></path></svg>';
+L[8][-8] = 'PreventHTFCandlePreviews';
+L[8][-9] = "Prevent candle previews when changing timeframes";
+
+L[9][-1] = "Workaround for overcoming HTF candle previews: when switching timeframes, it will shortly go back to the previous HTF candle and will automatically play step by step from there, to depict the accurate current HTF candle state in the end";
+L[9][-2] = "AutoSnapshot";
+L[9][-3] = "Auto capture trade snapshots";
+L[9][-4] = "Save into the eBacktesting journal panel automatic snapshots of the chart during and after a trade: when the position opens, when either TP or SL gets hit, when BE gets hit, or when the trade is manually closed.";
+L[9][-5] = "CanModifyQty";
+L[9][-6] = "Allow modifying quantity";
+L[9][-7] = "Enable the ability to modify the quantity (lots) of each trade in the eBacktesting panel.";
+L[9][-8] = "Journal Columns";
+L[9][-9] = "ebacktesting-journal-options-section";
+
+L.r[0][0] = "ebacktesting-column-settings-table";
+L.r[0][1] = "data-column-id";
+L.r[0][2] = "column-drag";
+L.r[0][3] = "drag-handle";
+L.r[0][4] = '<svg width="20" height="100%" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="5" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="6" cy="19" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle><circle cx="18" cy="5" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle><circle cx="18" cy="19" r="1.5"></circle></svg>';
+L.r[0][5] = "column-enable";
+L.r[0][6] = "data-column-name";
+L.r[0][7] = "column-name";
+L.r[0][8] = "column-type";
+L.r[0][9] = "text";
+
+L.r[1][0] = "Text";
+L.r[1][1] = "richtext";
+L.r[1][2] = "Rich text";
+L.r[1][3] = "number";
+L.r[1][4] = "Number";
+L.r[1][5] = "bool";
+L.r[1][6] = "Yes/No";
+L.r[1][7] = "date";
+L.r[1][8] = "Date";
+L.r[1][9] = "time";
+
+L.r[2][0] = "Time";
+L.r[2][1] = "datetime";
+L.r[2][2] = "Date & time";
+L.r[2][3] = "actions";
+L.r[2][4] = "Actions";

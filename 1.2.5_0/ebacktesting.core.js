@@ -1,6 +1,5 @@
 ﻿export let L = {
     user: { userId: null },
-    replayApi: await window.TradingViewApi.replayApi(),
     isSkippingCandles: false,
     permissions: [],
     dataOps: { 
@@ -61,4 +60,5 @@
             this._storage = {};
         }
     },
+    r: await TradingViewApi.replayApi(),
 };

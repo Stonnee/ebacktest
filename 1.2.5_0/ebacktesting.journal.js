@@ -1,7 +1,9 @@
 ﻿import { L } from "./ebacktesting.core.js";
 
 L.isPredefinedColumn = (columnName, exceptColumns) => {
-    return (!exceptColumns || !exceptColumns.includes(columnName)) && ["Trade", "Date/Time", "Price", "Symbol", "Lots", "Risk", "Profit", "Cumulative profit", "Run-up", "Drawdown", "Snapshots", "BE Run-up", "Notes", "Analysis Time"].includes(columnName);
+    return (!exceptColumns || !exceptColumns.includes(columnName)) && [
+        "Trade", "Date/Time", "Price", "Symbol", "Lots", "RR", "Risk", "Profit", "Cumulative profit", "Run-up", "Drawdown", "Snapshots", "BE Run-up", "Notes", "Analysis Time"
+    ].includes(columnName);
 };
 
 L.updatePositionsList = function (reset) {
@@ -134,10 +136,10 @@ L.createPositionsListHeader = function (reset) {
           <div class="wrapper ebacktesting-positions-table">
             <div class="ka root table">
               <div class="ka-table-wrapper tableWrapper">
-                <table class="ka-table" data-selector="table" style="table-layout: auto;">
+                                <table class="ka-table" data-selector="table" style="table-layout: auto;">
                   <thead class="ka-thead">
                     <tr class="ka-tr ka-thead-row">
-                      <th class="ka-thead-cell ka-thead-background ka-pointer headCell fitContent centerAlign" scope="col">
+                                            <th class="ka-thead-cell ka-thead-background ka-pointer headCell fitContent centerAlign" scope="col" column-name="Trade">
                         <div class="ka-thead-cell-wrapper">
                             <div class="ka-thead-cell-content-wrapper">Trade</div>
                         </div>
@@ -165,8 +167,166 @@ L.createPositionsListHeader = function (reset) {
         });
 
         positionsContainer.append(listStructure);
+        // Enable column resizing by dragging near the right edge of any header/body cell.
+        (function enableColumnResize(){
+            const tableEl = $(".ebacktesting-positions-table table.ka-table");
+            if (!tableEl.length) return;
+
+            // Removed legacy splitter overlay; we'll highlight the entire column border instead.
+            const wrapper = $(".ebacktesting-positions-table .ka-table-wrapper.tableWrapper");
+            if (!wrapper.length) return;
+            if (wrapper.css('position') === 'static') wrapper.css('position','relative');
+            // Inject highlight CSS once
+            if (!document.getElementById('ebacktesting-col-highlight-style')) {
+                const hlCss = `
+                    <style id="ebacktesting-col-highlight-style">
+                        .ebacktesting-col-highlight th[column-name],
+                        .ebacktesting-col-highlight td[column-name]{ position:relative; }
+                        /* Fallback border (some themes may ignore box-shadow) */
+                        th.ebt-col-hl, td.ebt-col-hl { border-right:2px solid #707070 !important; }
+                        th.ebt-col-hl-last, td.ebt-col-hl-last { border-left:2px solid #707070 !important; }
+                    </style>`;
+                $('head').append(hlCss);
+            }
+            const clearHighlight = () => { tableEl.find('th.ebt-col-hl, td.ebt-col-hl, th.ebt-col-hl-last, td.ebt-col-hl-last').removeClass('ebt-col-hl ebt-col-hl-last'); };
+
+            // Apply previously saved widths, if any
+            const applyInitialWidths = () => {
+                const rules = [];
+                const tradeW = L.session?.meta?.columnWidths?.Trade;
+                if (tradeW) {
+                    rules.push(`th[column-name='Trade'], td[column-name='Trade']{width:${tradeW}px;min-width:${tradeW}px;max-width:${tradeW}px;}`);
+                }
+                for (const c of (L.session.sessionColumns || [])) {
+                    if (c.width && Number.isFinite(c.width)) {
+                        const w = Math.max(40, Math.floor(c.width));
+                        const safe = CSS.escape(c.columnName);
+                        rules.push(`th[column-name='${safe}'], td[column-name='${safe}']{width:${w}px;min-width:${w}px;max-width:${w}px;}`);
+                    }
+                }
+                $("#ebacktesting-colwidths").remove();
+                if (rules.length) {
+                    $("head").append(`<style id="ebacktesting-colwidths">${rules.join("\n")}</style>`);
+                }
+            };
+
+            applyInitialWidths();
+
+            const EDGE = 12; // px from right edge to activate resizing
+            const MINW = 60; // minimum width in px
+            const state = { active:false, column:null, startX:0, startW:0 };
+
+            const isNearRightEdge = (el, e) => {
+                const r = el.getBoundingClientRect();
+                return e.clientX >= r.right - EDGE && e.clientX <= r.right + EDGE;
+            };
+
+            const applyWidth = (colName, widthPx) => {
+                const w = Math.max(MINW, Math.floor(widthPx));
+                const esc = CSS.escape(colName);
+                tableEl.find(`th[column-name='${esc}'], td[column-name='${esc}']`).css({ width: w+"px", minWidth: w+"px", maxWidth: w+"px" });
+            };
+
+            // Cursor feedback and column highlight on hover near right edge
+            tableEl.on('mousemove', "th[column-name], td[column-name]", function(e){
+                const near = isNearRightEdge(this, e);
+                this.style.cursor = near ? 'col-resize' : '';
+                if (!state.active) clearHighlight();
+                if (near || state.active) {
+                    const colName = this.getAttribute('column-name');
+                    const esc = CSS.escape(colName);
+                    // Highlight all cells of the column by adding a right-edge indicator
+                    tableEl.find(`th[column-name='${esc}'], td[column-name='${esc}']`).addClass('ebt-col-hl');
+                }
+            });
+            tableEl.on('mouseleave', function(){ if (!state.active) clearHighlight(); });
+
+            // Start resizing (activate highlight)
+            tableEl.on('mousedown', "th[column-name], td[column-name]", function(e){
+                if (!isNearRightEdge(this, e)) return;
+                e.preventDefault(); e.stopPropagation();
+                const colName = this.getAttribute('column-name');
+                const header = tableEl.find(`th[column-name='${CSS.escape(colName)}']`).first();
+                state.active = true; state.column = colName; state.startX = e.clientX; state.startW = header.outerWidth();
+                document.body.classList.add('ebacktesting-resizing-col');
+                clearHighlight();
+                const esc = CSS.escape(colName);
+                tableEl.find(`th[column-name='${esc}'], td[column-name='${esc}']`).addClass('ebt-col-hl');
+            });
+
+            // Global move/end handlers
+            $(document)
+                .on('mousemove.journalResize', function(e){
+                    if (!state.active) return;
+                    const newW = state.startW + (e.clientX - state.startX);
+                    applyWidth(state.column, newW);
+                })
+                .on('mouseup.journalResize', function(){
+                    if (!state.active) return;
+                    const colName = state.column;
+                    const header = tableEl.find(`th[column-name='${CSS.escape(colName)}']`).first();
+                    const w = Math.max(MINW, Math.floor(header.outerWidth()));
+                    if (colName === 'Trade') {
+                        L.session.meta = L.session.meta || {}; L.session.meta.columnWidths = L.session.meta.columnWidths || {};
+                        L.session.meta.columnWidths.Trade = w;
+                    } else {
+                        const col = (L.session.sessionColumns || []).find(c => c.columnName === colName);
+                        if (col) col.width = w;
+                        //L.tryExec(() => { L.saveSessionColumns(L.session.sessionId, L.session.sessionColumns); }, true);
+                    }
+                    state.active = false; state.column = null;
+                    document.body.classList.remove('ebacktesting-resizing-col');
+                    clearHighlight();
+                });
+
+            // Inject helper CSS to indicate resizing and prevent text selection while dragging
+            if (!document.getElementById('ebacktesting-resize-style')) {
+                $("head").append(`<style id="ebacktesting-resize-style">body.ebacktesting-resizing-col{cursor:col-resize!important;user-select:none!important}</style>`);
+            }
+        })();
+
         $(".ebacktesting-positions-table table.ka-table").attr("ebacktesting-session", L.session.sessionId);
         L.updatePositionsList(true);
+
+        // --- Highlight all right borders of th/td on Ctrl/Shift/Alt ---
+        (function enableKeyBorderHighlight(){
+            const highlightClass = 'ebt-key-border-hl';
+            const styleId = 'ebacktesting-keyborder-style';
+            if (!document.getElementById(styleId)) {
+                const css = `
+                    th.${highlightClass}, td.${highlightClass} {
+                        border-right: 1px solid #70707082;
+                        transition: border-color 0.15s;
+                    }
+                `;
+                document.head.insertAdjacentHTML('beforeend', `<style id="${styleId}">${css}</style>`);
+            }
+            let isActive = false;
+            function setHighlight(on) {
+                const tables = document.querySelectorAll('.ebacktesting-positions-table table.ka-table');
+                tables.forEach(table => {
+                    table.querySelectorAll('th[column-name], td[column-name]').forEach(cell => {
+                        if (on) cell.classList.add(highlightClass);
+                        else cell.classList.remove(highlightClass);
+                    });
+                });
+            }
+            function keyHandler(e) {
+                if (e.shiftKey) {
+                    if (!isActive) { setHighlight(true); isActive = true; }
+                } else {
+                    if (isActive) { setHighlight(false); isActive = false; }
+                }
+            }
+            function upHandler(e) {
+                // On any keyup, check if any modifier is still held
+                if (!(e.shiftKey)) {
+                    setHighlight(false); isActive = false;
+                }
+            }
+            document.addEventListener('keydown', keyHandler, true);
+            document.addEventListener('keyup', upHandler, true);
+        })();
     }
 
     return positionsContainer;
@@ -413,7 +573,7 @@ L.optimizePositionsList = function() {
                 
                 if (scrollHeight - scrollTop - viewportHeight < 500 && isHidden) {
                     row.removeClass('hidden');
-                    return false;
+                    // return false;
                 }
             });
         }, 50);
@@ -661,7 +821,7 @@ L.onEditField = function (event, position) {
             L.createInput("number", event, position);
         } else if (element.hasClass("V_VALUE")) {
             const columnName = $(event.currentTarget).parent().attr("column-name");
-            if (!L.isPredefinedColumn(columnName, ["Notes", "Analysis Time", "Lots"])) {
+            if (!L.isPredefinedColumn(columnName, ["Notes", "Analysis Time", "Lots", "RR"])) {
                 const column = L.session.sessionColumns.find(c => c.columnName == columnName);
                 if (column.columnEnumValues) {
                     event.preventDefault();
@@ -767,11 +927,23 @@ L.createInput = function (columnType, event, position) {
                 }
                 position.meta.trackBeRunUp = false;
             } else if(element.parents("td").attr("column-name") == "Lots") {
-                position.quantity = Number(userValue);
-                position.risk((position.entryPrice - position.stopPrice()) * position.quantity * position.symbol.meta.contractSize * position.entryCurrencyRate);
-                L.dataOps.updatePositionQuantity(position.positionId, position.quantity);
-                L.getBalanceAfterPositions(L.session.capital, L.session.positions).then((balance) => { L.session.meta.balance = balance; });
+                const qtyDiff = position.quantity / Number(userValue);
 
+                position.quantity = Number(userValue);
+                L.dataOps.updatePositionQuantity(position.positionId, position.quantity);
+
+                if(qtyDiff != 0) {
+                    position.risk(position.getRisk(true) / qtyDiff);
+                    position.columnValue("BE Run-up", position.getBERunUp(true) / qtyDiff);
+                    position.columnValue("Run-up", position.getRunUp(true) / qtyDiff);
+                    position.columnValue("Drawdown", position.getDrawDown(true) / qtyDiff);
+                    
+                    if(position.exitTime) {
+                        position.meta.profit = position.getProfitAtPrice(position.exitPrice, true);
+                    }
+                }
+
+                L.getBalanceAfterPositions(L.session.capital, L.session.positions).then((balance) => { L.session.meta.balance = balance; });
                 L.updatePositionUI(position);
             } else {
                 position.columnValue(element.parent().attr("column-name"), userValue);
@@ -827,198 +999,6 @@ L.isEditingPositionsList = function () {
         || $(".ebacktesting-positions-table textarea").length > 0;
 }
 
-L.viewSnapshots = function (event, position) {
-    if ($(`tr#ID_${position.positionId}`).hasClass("selected")) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-    }
-
-    if (!position.positionSnapshots || position.positionSnapshots.length === 0) {
-        return;
-    }
-
-    var preloadedImages = [];
-    
-    position.positionSnapshots.forEach((snapshot) => { 
-        var img = new Image();
-        img.src = `${L.snapshotUrlPrefix}${snapshot.snapshotUrl}`;
-        preloadedImages.push(img);
-    });
-
-    let currentIndex = 0;
-    let currentUrl = `${L.snapshotUrlPrefix}${position.positionSnapshots[currentIndex].snapshotUrl}`;
-
-    function updateSnapshot() {
-        currentUrl = `${L.snapshotUrlPrefix}${position.positionSnapshots[currentIndex].snapshotUrl}`;
-        if (position.positionSnapshots.length === 0) {
-            $(".snapshot-viewer").remove();
-        } else {
-            $(".snapshot-viewer-image-container img").attr("src", `${currentUrl}`);
-        }
-        $(".snapshot-viewer-info .snapshot-viewer-counter").text(`${currentIndex + 1} / ${position.positionSnapshots.length}`);
-        $(".snapshot-viewer-info .snapshot-viewer-url").text(currentUrl);
-        $(".snapshot-viewer-info .snapshot-viewer-time").text(
-            L.toTradingViewDateTimeFormat(
-                position.positionSnapshots[currentIndex].sessionTime,
-                window.TradingViewApi.activeChart().getTimezone()
-            )
-        );
-        $(`#ID_${position.positionId}.V_POSITION`).find(".view-snapshots-button").attr("data-snapshots", position.positionSnapshots.length);
-        $(`#ID_${position.positionId}.V_POSITION`).find(".view-snapshots-button").attr("title", `View ${position.positionSnapshots.length > 1 ? position.positionSnapshots.length + " " : ""}snapshot${position.positionSnapshots.length > 1 ? "s" : ""}`);
-    }
-
-    const viewer = $(`
-        <div class="snapshot-viewer">
-            <button class="snapshot-viewer-button snapshot-viewer-close-button lightButton secondary xsmall typography-regular14px" style="--ui-lib-light-button-content-max-lines: 1;" title="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path stroke="currentColor" stroke-width="1.2" d="m1.5 1.5 15 15m0-15-15 15"></path></svg>
-            </button>
-            <button class="snapshot-viewer-button snapshot-viewer-delete-button lightButton secondary xsmall typography-regular14px" style="--ui-lib-light-button-content-max-lines: 1;" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><path fill="currentColor" d="M12 4h3v1h-1.04l-.88 9.64a1.5 1.5 0 0 1-1.5 1.36H6.42a1.5 1.5 0 0 1-1.5-1.36L4.05 5H3V4h3v-.5C6 2.67 6.67 2 7.5 2h3c.83 0 1.5.67 1.5 1.5V4ZM7.5 3a.5.5 0 0 0-.5.5V4h4v-.5a.5.5 0 0 0-.5-.5h-3ZM5.05 5l.87 9.55a.5.5 0 0 0 .5.45h5.17a.5.5 0 0 0 .5-.45L12.94 5h-7.9Z"></path></svg>
-            </button>
-            <div class="snapshot-viewer-image-container">
-                <img src="${currentUrl}" alt="Snapshot" />
-            </div>
-            <button class="snapshot-viewer-button snapshot-viewer-nav-button snapshot-viewer-prev lightButton secondary xsmall typography-regular14px" style="--ui-lib-light-button-content-max-lines: 1;" title="Previous">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="1.2" d="M17 22.5 6.85 12.35a.5.5 0 0 1 0-.7L17 1.5"></path></svg>
-            </button>
-            <div class="snapshot-viewer-info">
-                <span class="snapshot-viewer-counter">${currentIndex + 1} / ${position.positionSnapshots.length}</span>
-                <br />
-                <span class="snapshot-viewer-url" contenteditable>${currentUrl}</span>
-                <br />
-                <span class="snapshot-viewer-time">${L.toTradingViewDateTimeFormat(position.positionSnapshots[currentIndex].sessionTime, window.TradingViewApi.activeChart().getTimezone())}</span>
-            </div>
-            <button class="snapshot-viewer-button snapshot-viewer-nav-button snapshot-viewer-next lightButton secondary xsmall typography-regular14px" style="--ui-lib-light-button-content-max-lines: 1;" title="Next">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"><g transform="scale(-1,1) translate(-24,0)"><path stroke="currentColor" stroke-linecap="round" stroke-width="1.2" d="M17 22.5 6.85 12.35a.5.5 0 0 1 0-.7L17 1.5"></path></g></svg>
-            </button>
-        </div>
-    `);
-
-    viewer.on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-        viewer.find(".snapshot-viewer-close-button").click();
-    });
-
-    viewer.find(".snapshot-viewer-close-button").on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        viewer.remove();
-        $(document).off("keydown.snapshotViewer"); // Remove keydown listener when viewer is closed
-    });
-
-    viewer.find(".snapshot-viewer-delete-button").on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        position.positionSnapshots.splice(currentIndex, 1);
-        L.dataOps.setPositionSnapshots(position.positionId, position.positionSnapshots);
-
-        if (position.positionSnapshots.length === 0) {
-            viewer.remove();
-            $(document).off("keydown.snapshotViewer"); // Remove keydown listener when viewer is closed
-        } else {
-            currentIndex = Math.min(currentIndex, position.positionSnapshots.length - 1);
-        }
-
-        updateSnapshot();
-    });
-
-    viewer.find(".snapshot-viewer-prev").on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        if (currentIndex > 0) {
-            currentIndex--;
-        } else {
-            currentIndex = position.positionSnapshots.length - 1; // Cycle to the last snapshot
-        }
-        updateSnapshot();
-    });
-
-    viewer.find(".snapshot-viewer-next").on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        if (currentIndex < position.positionSnapshots.length - 1) {
-            currentIndex++;
-        } else {
-            currentIndex = 0; // Cycle to the first snapshot
-        }
-        updateSnapshot();
-    });
-
-    viewer.find(".snapshot-viewer-url").on("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-    });
-
-    // Add keydown listener for left/right arrow keys
-    $(document).on("keydown.snapshotViewer", function (e) {
-        if (e.key === "ArrowLeft") {
-            viewer.find(".snapshot-viewer-prev").click();
-        } else if (e.key === "ArrowRight") {
-            viewer.find(".snapshot-viewer-next").click();
-        } else if (e.key === "Escape") {
-            viewer.find(".snapshot-viewer-close-button").click();
-        } else if (e.key === "Delete") {
-            viewer.find(".snapshot-viewer-delete-button").click();
-        }
-    });
-
-    $("body").append(viewer);
-}
-
-L.takeSnapshot = async function (position, withDate) {
-    var takeSnapshotButton = $(`#ID_${position.positionId}.V_POSITION`).find(".take-snapshot-button");
-    var takeSnapshotLoader = $(`#ID_${position.positionId}.V_POSITION`).find(".take-snapshot-loader");
-    takeSnapshotButton.hide();
-    takeSnapshotLoader.show();
-
-    setTimeout(async () => {
-        const formattedSessionDate = $("#eBacktestingCurrentDate").text();
-        var infoTextShapeId = null;
-        if (withDate) {
-            infoTextShapeId = await TradingViewApi.activeChart().createAnchoredShape({ x: 0.005, y: 0.93 }, { shape: "anchored_text", text: `eBacktesting date: ${formattedSessionDate}`, overrides: { color: "white", backgroundColor: "rgb(0,0,0)", backgroundTransparency: 1, fillBackground: true, fontsize: 14 } })
-        }
-        const snapshotUrl = await window.TradingViewApi.takeScreenshot();
-        if(infoTextShapeId) {
-            L.removeShapeById(infoTextShapeId);
-        }
-        position.positionSnapshots.push({ snapshotUrl, sessionTime: L.session.currentDate });
-        L.dataOps.setPositionSnapshots(position.positionId, position.positionSnapshots);
-
-        var viewSnapshostButton = $(`#ID_${position.positionId}.V_POSITION`).find(".view-snapshots-button");
-        viewSnapshostButton.attr("data-snapshots", position.positionSnapshots.length);
-        viewSnapshostButton.attr("title", `View ${position.positionSnapshots.length > 1 ? position.positionSnapshots.length + " " : ""}snapshot${position.positionSnapshots.length > 1 ? "s" : ""}`);
-
-        setTimeout(() => {
-            takeSnapshotButton.show();
-            takeSnapshotLoader.hide();
-        }, 300);
-
-        L.tryExec(() => navigator.clipboard.writeText(`${L.snapshotUrlPrefix}${snapshotUrl}`), true);
-    }, 10);
-}
-
-L.onTakeSnapshot = async function (event, position) {
-    if ($(`tr#ID_${position.positionId}`).hasClass("selected")) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-    }
-
-    await L.takeSnapshot(position, event.ctrlKey);
-}
-
 L.saveSessionColumns = function (sessionId, columns) {
     const defaultColumns = [
         { columnName: "Trade", columnType: "actions", sortable: false, visible: true },
@@ -1026,6 +1006,7 @@ L.saveSessionColumns = function (sessionId, columns) {
         { columnName: "Price", columnType: "number", sortable: true, visible: true },
         { columnName: "Symbol", columnType: "text", sortable: true, visible: false },
         { columnName: "Lots", columnType: "number", sortable: true, visible: true },
+        { columnName: "RR", columnType: "number", sortable: true, visible: false },
         { columnName: "Risk", columnType: "number", sortable: true, visible: true },
         { columnName: "Profit", columnType: "number", sortable: true, visible: true },
         { columnName: "Cumulative profit", columnType: "number", sortable: true, visible: false },

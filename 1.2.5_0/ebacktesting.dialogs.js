@@ -3,16 +3,12 @@
 L.showInputPrompt = function (message, defaultValue, placeholder, parent) {
     return new Promise((resolve) => {
         const dialog = $("<div>")
-            .addClass("ebacktesting-prompt-dialog")
+            .addClass(L.s(-2, 3) /* ebacktesting-prompt-dialog */)
             .appendTo(parent);
 
         const dialogContent = $("<div>")
-            .addClass("ebacktesting-prompt-dialog-content")
+            .addClass(L.s(-2, 4) /* ebacktesting-prompt-dialog-content */)
             .appendTo(dialog);
-
-        const messageElement = $("<h3>")
-            .text(message)
-            .appendTo(dialogContent);
 
         const input = $("<input>")
             .val(defaultValue)
@@ -24,8 +20,8 @@ L.showInputPrompt = function (message, defaultValue, placeholder, parent) {
             .appendTo(dialogContent);
 
         const okButton = $("<button>")
-            .text("OK")
-            .addClass("lightButton secondary xsmall typography-regular14px ")
+            .text(L.s(-2, 5) /* OK */)
+            .addClass("lightButton secondary xsmall typography-regular14px")
             .on("click", () => {
                 dialog.remove();
                 resolve(input.val());
@@ -33,8 +29,8 @@ L.showInputPrompt = function (message, defaultValue, placeholder, parent) {
             .appendTo(buttons);
 
         const cancelButton = $("<button>")
-            .text("Cancel")
-            .addClass("lightButton secondary xsmall typography-regular14px ")
+            .text(L.s(-2, 6) /* Cancel */)
+            .addClass("lightButton secondary xsmall typography-regular14px")
             .on("click", () => {
                 dialog.remove();
                 resolve(null);
@@ -42,7 +38,7 @@ L.showInputPrompt = function (message, defaultValue, placeholder, parent) {
             .appendTo(buttons);
 
         dialog.on("click mousedown mouseup focusin", (e) => {
-            if ($(e.target).hasClass("ebacktesting-prompt-dialog")) {
+            if ($(e.target).hasClass(L.s(-2, 3) /* ebacktesting-prompt-dialog */)) {
                 e.stopPropagation();
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -65,7 +61,7 @@ L.showInputPrompt = function (message, defaultValue, placeholder, parent) {
 }
 
 L.showDialog = async function (title) {
-    const hideDefaultDialogCss = `div[role="dialog"][data-name="source-properties-editor"] { display: none; }`
+    const hideDefaultDialogCss = `div[role="dialog"][data-name="source-properties-editor"] { display: none; }`;
     $("head").append(`<style>${hideDefaultDialogCss}</style>`);
     
     L.removeDummyShape();
@@ -92,7 +88,7 @@ L.showDialog = async function (title) {
 };
 
 L.showSessions = async function () {
-    await L.showDialog("eBacktesting");
+    await L.showDialog(L.s(-2, 7) /* eBacktesting */);
 };
 
 L.showSettings = async function () {
@@ -100,11 +96,11 @@ L.showSettings = async function () {
 };
 
 L.showGotoDateDialog = async function () {
-    await L.showDialog("Go to Date/Time");
+    await L.showDialog(L.s(-2, 8) /* Go to Date/Time */);
 };
 
 L.showAnalysisTimesDialog = async function () {
-    await L.showDialog("Analysis Times");
+    await L.showDialog(L.s(-2, 9) /* Analysis Times */);
 };
 
 L.monitorDialogs = function () {
@@ -116,10 +112,10 @@ L.monitorDialogs = function () {
         }
 
         const dialogs = [
-            { name: "eBacktesting", handler: L.createSessionsUI },
+            { name: L.s(-2, 7) /* eBacktesting */, handler: L.createSessionsUI },
             { name: L.session?.name, handler: L.createSettingsUI },
-            { name: "Go to Date/Time", handler: L.createGotoDateUI },
-            { name: "Analysis Times", handler: L.createAnalysisTimesUI },
+            { name: L.s(-2, 8) /* Go to Date/Time */, handler: L.createGotoDateUI },
+            { name: L.s(-2, 9) /* Analysis Times */, handler: L.createAnalysisTimesUI },
         ];
 
         for (const dialog of dialogs) {
@@ -161,7 +157,7 @@ L.isGeneratedShape = function (shapeId) {
 
 L.removeDummyShape = function () {
     const chart = L.getCharts()[0];
-    const dummyShapes = chart.getAllShapes().filter(s => s.name == "emoji");
+    const dummyShapes = chart.getAllShapes().filter(s => s.name == L.s(-3, 0) /* emoji */);
     for (const dummyShapeInfo of dummyShapes) {
         if (L.isGeneratedShape(dummyShapeInfo.id)) {
             L.removeShapeById(dummyShapeInfo.id, chart, true);

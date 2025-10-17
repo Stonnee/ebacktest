@@ -1,10 +1,10 @@
-﻿import { L } from "./ebacktesting.core.js";
+import { L } from "./ebacktesting.core.js";
 
 L.onSymbolChanged = async function (chart, symbolInfo) {
     if(L.session) {
         L.session.meta.changingSymbol = true;
-        L.cache.delete(`getCharts-true`);
-        L.cache.delete(`getCharts-false`);
+        L.cache.delete(L.s(1, 0) /* getCharts-true */);
+        L.cache.delete(L.s(1, 1) /* getCharts-false */);
         
         L.temporaryOffset(chart);
         const barsSnapshot = chart.chartModel().mainSeries().bars()._items.map(b => b.value.join()).join();
@@ -30,10 +30,10 @@ L.onSymbolChanged = async function (chart, symbolInfo) {
 L.onChartIntervalChanged = async function (chart, interval) {
     if(L.session) {
         L.session.meta.isIntervalChanging = true;
-        L.cache.delete(`getCharts-true`);
-        L.cache.delete(`getCharts-false`);
+        L.cache.delete(L.s(1, 0) /* getCharts-true */);
+        L.cache.delete(L.s(1, 1) /* getCharts-false */);
         
-        if (L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == 'true') {
+        if (L.session.getParameter(L.sessionParameterIds.PreventHTFCandlePreviews) == L.s(0, 6) /* true */) {
             const timeframeSeconds = chart.timeframeSeconds;
             const barsSnapshot = chart.chartModel().mainSeries().bars()._items.map(b => b.value.join()).join();
             L.temporaryOffset();
@@ -66,7 +66,7 @@ L.onChartIntervalChanged = async function (chart, interval) {
                 await L.selectDate(new Date(selectedDate * 1000), true);
                 L.undoTemporaryOffset();
 
-                if (await L.skipTime(L.replayTo - L.replayApi.currentDate().value(), true, 500)) {
+                if (await L.skipTime(L.replayTo - L.r.currentDate().value(), true, 500)) {
                     L.replayTo = null;
                 }
             } else {
@@ -82,6 +82,7 @@ L.onChartIntervalChanged = async function (chart, interval) {
 
 L.setHistory = function (chart, session) {
     session = session || L.session;
+    if(session.meta) {
     const bars = chart.chartModel().mainSeries().bars()._items;
 
     session.meta.lastKnownBarTime = session.meta.lastKnownBarTime || chart.priceHistoryEntries[chart.priceHistoryEntries.length - 1]?.time || session.currentDate;
@@ -117,18 +118,19 @@ L.setHistory = function (chart, session) {
     if(latestPrice) {
         const latestPriceHistoryEntry = chart.priceHistoryEntries[chart.priceHistoryEntries.length - 1];
         if (chart.priceHistoryEntries.length == 0 || latestPriceHistoryEntry.price != latestPrice) {
-            chart.priceHistoryEntries.push({ price: latestPrice, time: L.replayApi.currentDate().value() });
+                chart.priceHistoryEntries.push({ price: latestPrice, time: L.r.currentDate().value() });
             while(chart.priceHistoryEntries.length > 50) {
                 chart.priceHistoryEntries.shift();
+                }
             }
         }
     }
 }
 
 L.getPositionChart = function (position, surpressError) {
-    const chart = L.getShapeChart(position.getShape().shapeId) || L.getCharts().find(c => c.symbol() == position.symbol.symbolName || c.chartModel().mainSeries().symbolInfo().pro_name == position.symbol.symbolName);
+    const chart = L.getShapeChart(position.getShape()?.shapeId) || L.getCharts().find(c => c.symbol() == position.symbol.symbolName || c.chartModel().mainSeries().symbolInfo().pro_name == position.symbol.symbolName);
     if (!chart && !surpressError) {
-        throw new Error("Chart not found while trying to get position chart");
+        throw new Error(L.s(1, 2) /* Chart not found while trying to get position chart */);
     }
 
     return chart;
@@ -160,7 +162,7 @@ L.removeShapeById = function (shapeId, chart, ignoreErrors) {
         chart.removeEntity(shapeId);
     } else {
         if (!ignoreErrors) {
-            throw new Error("Chart not found while trying to remove shape");
+            throw new Error(L.s(1, 3) /* Chart not found while trying to remove shape */);
         }
     }
 }
@@ -178,7 +180,7 @@ L.keepSessionActive = function() {
 }
 
 L.getCharts = function (reverse) {
-    const cacheKey = `getCharts-${reverse}`;
+    const cacheKey = L.s(1, 4, reverse) /* getCharts-{0} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
@@ -196,7 +198,7 @@ L.getCharts = function (reverse) {
                 chart.__changeMonitored = true;
             }
 
-            if(!chart.__mouseMonitored && L.session?.getParameter(L.sessionParameterIds.AnalysisTimer) == 'true') {
+            if(!chart.__mouseMonitored && L.session?.getParameter(L.sessionParameterIds.AnalysisTimer) == L.s(0, 6) /* true */) {
                 chart.chartModel().crosshairSource().moved().subscribe(null, (e) => L.onChartMouseMove(chart, e));
                 chart.__mouseMonitored = true;
             }
@@ -248,6 +250,7 @@ L.temporaryOffset = function (exclusiveChart) {
         if(chart == exclusiveChart || !exclusiveChart) {
             const chartTimeScale = chart.getTimeScale();
             const rightOffset = chartTimeScale.rightOffset();
+            chart.__rightOffset = rightOffset;
             chartTimeScale.defaultRightOffset().setValue(rightOffset);
             chartTimeScale.setRightOffset(-10);
         }
@@ -261,7 +264,14 @@ L.undoTemporaryOffset = function (exclusiveChart, timeout) {
         if(chart == exclusiveChart || !exclusiveChart) {
             setTimeout(() => {
                 const chartTimeScale = chart.getTimeScale();
+                if(chart.__rightOffset === undefined) {
                 chartTimeScale.setRightOffset(chartTimeScale.defaultRightOffset().readonly().value());
+                } else {
+                    chartTimeScale.setRightOffset(chart.__rightOffset);
+                    chartTimeScale.defaultRightOffset().setValue(chart.__rightOffset);
+                    delete chart.__rightOffset;
+                }
+                
             }, timeout);
         }
     });

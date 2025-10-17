@@ -1,6 +1,7 @@
 ﻿
 
 const files = [
+    "ebacktesting.loc.js",
     "ebacktesting.js",
     "ebacktesting.core.js",
     "ebacktesting.candles.js",
@@ -19,7 +20,11 @@ const files = [
     "ebacktesting.positions.js",
     "ebacktesting.sessionchannel.js",
     "ebacktesting.sessions.js",
-    "ebacktesting.stats.js"
+    "ebacktesting.snapshots.js",
+    "ebacktesting.stats.js",
+    "./lightweight-charts.production.mjs",
+    "./html2canvas.esm.js",
+    "./+esm"
 ];
 
 for (let i = 0; i < files.length; i++) {

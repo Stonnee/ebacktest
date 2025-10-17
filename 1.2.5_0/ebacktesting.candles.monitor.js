@@ -42,19 +42,19 @@ L.subscribeToData = async function(ctx) {
   
     // REPLAY: drive off the playhead time; then read on next frame
     (async () => {
-      L.replayApi.currentDate().subscribe(scheduleRead);
+      L.r.currentDate().subscribe(scheduleRead);
     })();
 }
 
 L.pollBarActivity = async function(ctx) {
-    if(L.replayTo && L.replayApi.currentDate().value() > L.replayTo) {
+    if(L.replayTo && L.r.currentDate().value() > L.replayTo) {
         L.replayTo = null;
     }
 
     if(ctx.replayTimestampCounter <= 0) {
         setTimeout(() => {
             L.createReplayTimestampUI();
-            $("#eBacktestingCurrentDate").text(L.toTradingViewDateTimeFormat(L.replayApi.currentDate().value(), window.TradingViewApi.activeChart().getTimezone()));
+            $(L.s(0, 9) /* #eBacktestingCurrentDate */).text(L.toTradingViewDateTimeFormat(L.r.currentDate().value(), window.TradingViewApi.activeChart().getTimezone()));
         }, 200);
         ctx.replayTimestampCounter = 5;
     }

@@ -21,7 +21,7 @@ L.getUtcDate = function (timestamp, timezone) {
 }
 
 L.getUTCOffsetInMinutes = function (timezone, date) {
-    const cacheKey = `getUTCOffsetInMinutes-${timezone}-${date}`;
+    const cacheKey = L.s(4, 9, timezone, date) /* getUTCOffsetInMinutes-{0}-{1} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
@@ -52,7 +52,7 @@ L.toTradingViewDateTimeFormat = function (timestamp, timezone, chart) {
         timezone = chart.getTimezone();
     }
 
-    const cacheKey = `toTradingViewDateTimeFormat-${timestamp}-${timezone}`;
+    const cacheKey = L.s(5, 0, timestamp, timezone) /* toTradingViewDateTimeFormat-{0}-{1} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
@@ -162,19 +162,19 @@ L.getNextDateTime = function(time) {
 }
 
 L.resolutionToSeconds = function (resolution) {
-    if (resolution.endsWith("T")) return parseInt(resolution);   // Convert ticks to seconds
-    else if (resolution.endsWith("S")) return parseInt(resolution);   // Get the seconds
-    else if (resolution.toLocaleLowerCase().endsWith("h")) return parseInt(resolution) * 60 * 60;   // Convert hours to seconds
-    else if (resolution.endsWith("D")) return parseInt(resolution) * 1440 * 60; // Convert days to seconds
-    else if (resolution.endsWith("W")) return parseInt(resolution) * 10080 * 60; // Convert weeks to seconds
-    else if (resolution.endsWith("M") && resolution.length > 1) return parseInt(resolution) * 43200 * 60; // Convert months to seconds
+    if (resolution.endsWith(L.s(5, 1) /* T */)) return parseInt(resolution);   // Convert ticks to seconds
+    else if (resolution.endsWith(L.s(5, 2) /* S */)) return parseInt(resolution);   // Get the seconds
+    else if (resolution.toLocaleLowerCase().endsWith(L.s(5, 3) /* h */)) return parseInt(resolution) * 60 * 60;   // Convert hours to seconds
+    else if (resolution.endsWith(L.s(5, 4) /* D */)) return parseInt(resolution) * 1440 * 60; // Convert days to seconds
+    else if (resolution.endsWith(L.s(5, 5) /* W */)) return parseInt(resolution) * 10080 * 60; // Convert weeks to seconds
+    else if (resolution.endsWith(L.s(5, 6) /* M */) && resolution.length > 1) return parseInt(resolution) * 43200 * 60; // Convert months to seconds
     else if (!isNaN(resolution)) return parseInt(resolution) * 60;              // Convert minutes to seconds
     else return 0; // unknown
 };
 
 L.resolutionToFriendlyText = function (resolution) {
-    if (resolution.endsWith("T")) return resolution.replace("T", "t");
-    else if (resolution.endsWith("S")) return resolution.replace("S", "s");
+    if (resolution.endsWith(L.s(5, 1) /* T */)) return resolution.replace("T", "t");
+    else if (resolution.endsWith(L.s(5, 2) /* S */)) return resolution.replace("S", "s");
     else if (!isNaN(resolution)) return resolution + "m";
     else return resolution;
 }

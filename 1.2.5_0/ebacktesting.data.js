@@ -1,35 +1,35 @@
 ﻿import { L } from "./ebacktesting.core.js";
 
 L.dataOps.getUserById = function (userId) {
-    return L.dataOps.get(`admin/user/${userId}`);
+    return L.dataOps.get(L.s(1, 5, userId) /* admin/user/{0} */);
 };
 
 L.dataOps.getOrSaveUserId = function (tradingViewUser) {
-    return L.dataOps.put(`admin/user`, {...tradingViewUser, settings: null, available_offers: null, session_hash: null, auth_token: null, notification_count: null});
+    return L.dataOps.put(L.s(1, 6) /* admin/user */, {...tradingViewUser, settings: null, available_offers: null, session_hash: null, auth_token: null, notification_count: null});
 };
 
 L.dataOps.getPermissions = function (planId) {
-    return L.dataOps.get(`admin/plans/${planId}/permissions`);
+    return L.dataOps.get(L.s(1, 7, planId) /* admin/plans/{0}/permissions */);
 };
 
 L.dataOps.getSessionColumns = function (sessionId) {
-    return L.dataOps.get(`journaling/session-columns/${sessionId}`);
+    return L.dataOps.get(L.s(1, 8, sessionId) /* journaling/session-columns/{0} */);
 }
 
 L.dataOps.saveSessionColumns = function (sessionId, columns) {
-    return L.dataOps.post(`journaling/session-columns/${sessionId}`, columns);
+    return L.dataOps.post(L.s(1, 8, sessionId) /* journaling/session-columns/{0} */, columns);
 }
 
 L.dataOps.getPositionColumns = function (positionId) {
-    return L.dataOps.get(`journaling/positions/columns/${positionId}`);
+    return L.dataOps.get(L.s(1, 9, positionId) /* journaling/positions/columns/{0} */);
 }
 
 L.dataOps.setPositionColumn = function (positionId, column) {
-    return L.dataOps.put(`journaling/positions/columns/${positionId}`, column);
+    return L.dataOps.put(L.s(2, 0, positionId) /* journaling/positions/columns/{0} */, column);
 }
 
 L.dataOps.getSessions = async function (userId) {
-    var sessions = await L.dataOps.get("backtesting/sessions", { userId }).then(s => s || []);
+    var sessions = await L.dataOps.get(L.s(2, 1) /* backtesting/sessions */, { userId }).then(s => s || []);
     return sessions.map(session => {
         session.currentDate = new Date(session.currentDate).getTime() / 1000;
         session.lastUpdate = new Date(session.lastUpdate);
@@ -38,45 +38,49 @@ L.dataOps.getSessions = async function (userId) {
 }
 
 L.dataOps.getSession = async function (sessionId) {
-    const session = await L.dataOps.get(`backtesting/sessions/${sessionId}`);
+    const session = await L.dataOps.get(L.s(2, 2, sessionId) /* backtesting/sessions/{0} */);
     session.currentDate = new Date(session.currentDate).getTime() / 1000;
     session.lastUpdate = new Date(session.lastUpdate);
     return session;
 }
 
 L.dataOps.createSession = function (session) {
-    return L.dataOps.post("backtesting/sessions", { ...session, currentDate: new Date(session.currentDate * 1000) });
+    return L.dataOps.post(L.s(2, 1) /* backtesting/sessions */, { ...session, currentDate: new Date(session.currentDate * 1000) });
 }
 
-L.dataOps.updateSession = function (session, skipCurrentDateUpdate) {
-    L.cache.delete(`getSessionPositions-${session.sessionId}`);
-    return L.dataOps.put(`backtesting/sessions`, { ...session, currentDate: skipCurrentDateUpdate ? undefined : new Date(session.currentDate * 1000) });
+L.dataOps.updateSession = function (session, skipCurrentDateUpdate, allowPastDate) {
+    L.cache.delete(L.s(2, 3, session.sessionId) /* getSessionPositions-{0} */);
+    return L.dataOps.put(L.s(2, 4, !!allowPastDate) /* backtesting/sessions?allowPastDate={0} */, { ...session, currentDate: skipCurrentDateUpdate ? undefined : new Date(session.currentDate * 1000) });
 }
 
 L.dataOps.deleteSession = function (sessionId) {
-    return L.dataOps.delete(`backtesting/sessions/${sessionId}`);
+    return L.dataOps.delete(L.s(2, 2, sessionId) /* backtesting/sessions/{0} */);
+}
+
+L.dataOps.cloneSession = function (sessionId, newName) {
+    return L.dataOps.post(L.s(2, 5, sessionId, newName) /* backtesting/sessions/{0}/clone?newName={1} */);
 }
 
 L.dataOps.getSessionParameters = function (sessionId) {
-    return L.dataOps.get(`backtesting/sessions/${sessionId}/parameters`);
+    return L.dataOps.get(L.s(2, 6, sessionId) /* backtesting/sessions/{0}/parameters */);
 };
 
 L.dataOps.setSessionParameterValue = function (sessionId, parameterId, parameterValue) {
-    return L.dataOps.put(`backtesting/sessions/${sessionId}/parameters/${parameterId}`, parameterValue);
+    return L.dataOps.put(L.s(2, 7, sessionId, parameterId) /* backtesting/sessions/{0}/parameters/{1} */, parameterValue);
 };
 
 L.dataOps.getOrAddSymbol = async function (symbolName, getSymbolInfo) {
-    const cacheKey = `getOrAddSymbol-${symbolName}`;
+    const cacheKey = L.s(2, 8, symbolName) /* getOrAddSymbol-{0} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
     } else {
-        var symbolData = await L.dataOps.get(`backtesting/symbols/${symbolName}`);
+        var symbolData = await L.dataOps.get(L.s(2, 9, symbolName) /* backtesting/symbols/{0} */);
 
         if (!symbolData) {
             const chartSymbolInfo = getSymbolInfo();
             symbolData = { symbolName: chartSymbolInfo.full_name, symbolType: chartSymbolInfo.type, pricePrecision: chartSymbolInfo.pricescale.toString().length - 1, quantityPrecision: 2, currencyId: chartSymbolInfo.currency_id };
-            symbolData = await L.dataOps.post("backtesting/symbols", symbolData);
+            symbolData = await L.dataOps.post(L.s(3, 0) /* backtesting/symbols */, symbolData);
         }
 
         L.cache.set(cacheKey, symbolData, 3600);
@@ -85,25 +89,25 @@ L.dataOps.getOrAddSymbol = async function (symbolName, getSymbolInfo) {
 }
 
 L.dataOps.getSymbolRuleContractSizes = async function (symbolType) {
-    const cacheKey = `getSymbolRuleContractSizes-${symbolType}`;
+    const cacheKey = L.s(3, 1, symbolType) /* getSymbolRuleContractSizes-{0} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
     } else {
-        const contractSizes = await L.dataOps.get(`backtesting/symbol-rule-contract-sizes/${symbolType}`);
+        const contractSizes = await L.dataOps.get(L.s(3, 2, symbolType) /* backtesting/symbol-rule-contract-sizes/{0} */);
         L.cache.set(cacheKey, contractSizes, 3600);
         return contractSizes;
     }
 }
 
 L.dataOps.getSessionPositions = async function (sessionId) {
-    const cacheKey = `getSessionPositions-${sessionId}`;
+    const cacheKey = L.s(3, 3, sessionId) /* getSessionPositions-{0} */;
     const cacheEntry = L.cache.getIfExists(cacheKey);
     if(cacheEntry[0]) {
         return cacheEntry[1];
     }
 
-    const rawPositions = await L.dataOps.get(`backtesting/positions/${sessionId}`);
+    const rawPositions = await L.dataOps.get(L.s(3, 4, sessionId) /* backtesting/positions/{0} */);
     const processedPositions = rawPositions.map((position, i) => ({
         ...position,
         index: rawPositions.length - i,
@@ -136,7 +140,7 @@ L.dataOps.getSessionPositions = async function (sessionId) {
 }
 
 L.dataOps.createPosition = function (position) {
-    return L.dataOps.post(`backtesting/positions`,
+    return L.dataOps.post(L.s(3, 5) /* backtesting/positions */,
         {
             ...position,
             sessionId: L.session.sessionId,
@@ -169,7 +173,7 @@ L.dataOps.createPosition = function (position) {
 }
 
 L.dataOps.closePosition = function (position) {
-    return L.dataOps.put(`backtesting/positions/close`, { ...position, 
+    return L.dataOps.put(L.s(3, 6) /* backtesting/positions/close */, { ...position, 
         exitTime: new Date(position.exitTime * 1000), 
         entryTime: undefined, 
         positionShapes: undefined, 
@@ -184,31 +188,31 @@ L.dataOps.closePosition = function (position) {
 }
 
 L.dataOps.addPositionBE = function (positionId, be) {
-    return L.dataOps.put(`backtesting/positions/be/${positionId}`, { ...be, barTime: new Date(be.barTime * 1000) });
+    return L.dataOps.put(L.s(3, 7, positionId) /* backtesting/positions/be/{0} */, { ...be, barTime: new Date(be.barTime * 1000) });
 }
 
 L.dataOps.addPositionRisk = function (positionId, risk) {
-    return L.dataOps.put(`backtesting/positions/risk/${positionId}`, { ...risk, barTime: new Date(risk.barTime * 1000) });
+    return L.dataOps.put(L.s(3, 8, positionId) /* backtesting/positions/risk/{0} */, { ...risk, barTime: new Date(risk.barTime * 1000) });
 }
 
 L.dataOps.addPositionSL = function (positionId, sl) {
-    return L.dataOps.put(`backtesting/positions/sl/${positionId}`, { ...sl, barTime: new Date(sl.barTime * 1000) });
+    return L.dataOps.put(L.s(3, 9, positionId) /* backtesting/positions/sl/{0} */, { ...sl, barTime: new Date(sl.barTime * 1000) });
 }
 
 L.dataOps.addPositionTP = function (positionId, tp) {
-    return L.dataOps.put(`backtesting/positions/tp/${positionId}`, { ...tp, barTime: new Date(tp.barTime * 1000) });
+    return L.dataOps.put(L.s(4, 0, positionId) /* backtesting/positions/tp/{0} */, { ...tp, barTime: new Date(tp.barTime * 1000) });
 }
 
 L.dataOps.getPositionShapes = function (positionId) {
-    return L.dataOps.get(`backtesting/positions/shapes/${positionId}`);
+    return L.dataOps.get(L.s(4, 1, positionId) /* backtesting/positions/shapes/{0} */);
 }
 
 L.dataOps.setPositionShape = function (positionId, positionShape) {
-    return L.dataOps.put(`backtesting/positions/shapes/${positionId}`, positionShape);
+    return L.dataOps.put(L.s(4, 2, positionId) /* backtesting/positions/shapes/{0} */, positionShape);
 }
 
 L.dataOps.getPositionSnapshots = async function (positionId) {
-    var rawSnapshots = await L.dataOps.get(`journaling/positions/snapshots/${positionId}`);
+    var rawSnapshots = await L.dataOps.get(L.s(4, 3, positionId) /* journaling/positions/snapshots/{0} */);
     return rawSnapshots.map((snapshot) => ({
         ...snapshot, 
         sessionTime: Math.floor(new Date(snapshot.sessionTime).getTime() / 1000) 
@@ -216,34 +220,34 @@ L.dataOps.getPositionSnapshots = async function (positionId) {
 }
 
 L.dataOps.setPositionSnapshots = function (positionId, snapshots) {
-    return L.dataOps.put(`journaling/positions/snapshots/${positionId}`, snapshots.map(snapshot => ({ ...snapshot, sessionTime: new Date(snapshot.sessionTime * 1000) })));
+    return L.dataOps.put(L.s(4, 3, positionId) /* journaling/positions/snapshots/{0} */, snapshots.map(snapshot => ({ ...snapshot, sessionTime: new Date(snapshot.sessionTime * 1000) })));
 };
 
 L.dataOps.deletePosition = function (positionId) {
-    return L.dataOps.delete(`backtesting/positions/${positionId}`);
+    return L.dataOps.delete(L.s(3, 4, positionId) /* backtesting/positions/{0} */);
 };
 
 L.dataOps.updateLastPrice = function (sessionId, symbolId, lastPrice) {
-    return L.dataOps.put(`backtesting/sessions/${sessionId}/symbols/${symbolId}/last-price`, lastPrice);
+    return L.dataOps.put(L.s(4, 4, sessionId, symbolId) /* backtesting/sessions/{0}/symbols/{1}/last-price */, lastPrice);
 };
 
 L.dataOps.updatePositionQuantity = function (positionId, quantity) {
-    return L.dataOps.put(`backtesting/positions/${positionId}/quantity`, quantity);
+    return L.dataOps.put(L.s(4, 5, positionId) /* backtesting/positions/{0}/quantity */, quantity);
 };
 
 L.dataOps.exportSessionStatistics = function (sessionName, positionEntries) {
-    return L.dataOps.post(`journaling/export/excel/${sessionName}`, positionEntries, "blob");
+    return L.dataOps.post(L.s(4, 6, sessionName) /* journaling/export/excel/{0} */, positionEntries, "blob");
 };
 
 L.dataOps.getAddons = function () {
-    return L.dataOps.get(`ui/addons`, { username: user.username });
+    return L.dataOps.get(L.s(4, 7) /* ui/addons */, { username: user.username });
 }
 
 L.dataOps.get = async function (url, params, responseFormat) {
     if (params) {
         url += "?" + new URLSearchParams(params);
     }
-    return await fetch(`https://api.ebacktesting.com/${url}`).then(response => {
+    return await fetch(L.s(4, 8, url) /* https://api.ebacktesting.com/{0} */).then(response => {
         if (response.status === 200) {
             return L.dataOps.parseResponse(response, responseFormat);
         }
@@ -251,7 +255,7 @@ L.dataOps.get = async function (url, params, responseFormat) {
 }
 
 L.dataOps.post = async function (url, data, responseFormat) {
-    return await fetch(`https://api.ebacktesting.com/${url}`, {
+    return await fetch(L.s(4, 8, url) /* https://api.ebacktesting.com/{0} */, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -265,7 +269,7 @@ L.dataOps.post = async function (url, data, responseFormat) {
 }
 
 L.dataOps.put = async function (url, data, responseFormat) {
-    return await fetch(`https://api.ebacktesting.com/${url}`, {
+    return await fetch(L.s(4, 8, url) /* https://api.ebacktesting.com/{0} */, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -279,7 +283,7 @@ L.dataOps.put = async function (url, data, responseFormat) {
 }
 
 L.dataOps.delete = async function (url) {
-    return await fetch(`https://api.ebacktesting.com/${url}`, {
+    return await fetch(L.s(4, 8, url) /* https://api.ebacktesting.com/{0} */, {
         method: "DELETE"
     }).then(response => {
         if (response.status === 200) {

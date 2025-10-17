@@ -23,7 +23,7 @@ L.createToolbarButton = function () {
             if (eBacktestingButton.attr("aria-pressed") === "true") {
                 L.exit(false, true);
             } else {
-                if(L.replayApi.isReplayStarted().value()) {
+                if(L.r.isReplayStarted().value()) {
                     L.messageBox("eBacktesting", "Please exit Bar Replay mode before starting eBacktesting.");
                 } else {
                     L.showSessions();
@@ -245,7 +245,7 @@ L.createReplayControls = function () {
                 if (L.session.getActivePositions().length == 0) {
                     L.session.meta.isReviewMode = true;
                     $(".ebacktesting-review-button", replayControls).addClass("isActive");
-                    L.toast("Review mode: click on a position's date to replay the trade.", 3000);
+                        L.toast("Review mode: click on a position's date (eBacktesting panel) to replay the trade.", 3000);
                 } else {
                     L.messageBox("Open position", "You cannot enter review mode while having active positions.");
                 }
@@ -286,7 +286,7 @@ L.createUI = function () {
     }
 
     setInterval(() => {
-        if(L.session.getParameter(L.sessionParameterIds.AnalysisTimer) == 'true' && L.session.meta.isActive) {
+        if(L.session.getParameter(L.sessionParameterIds.AnalysisTimer) == 'true' && L.session.meta.isActive && !L.session.meta.isReviewMode && !L.r.isAutoplayStarted().value() && !L.isSkippingCandles) {
             var analysisTime = L.session.meta.analysisTimes.find(at => at.analysisStartTime == L.session.currentDate);
             if(!analysisTime) {
                 analysisTime = {
@@ -297,25 +297,25 @@ L.createUI = function () {
 
                 L.session.meta.analysisTimes.unshift(analysisTime);
             } else {
-                L.session.meta.totalAnalysisTime = (L.session.meta.totalAnalysisTime || 0) + 1;
+                L.session.meta.totalAnalysisTime = (L.session.meta.totalAnalysisTime || 0) + 0.11;
                 if(L.session.meta.totalAnalysisTime > 3600) {
                     L.session.meta.totalAnalysisTime = 0;
                     L.messageBox("Overtrading", "You have been analyzing for over 1 hour. Please consider a break to avoid overtrading.");
                 }
                 if(analysisTime.analysisDuration < 3600) {
-                    analysisTime.analysisDuration += 1;
+                    analysisTime.analysisDuration += 0.11;
                 }
-                analysisTime.analysisTimespan = L.formatTimestamp(analysisTime.analysisDuration);
+                analysisTime.analysisTimespan = L.formatTimestamp(parseInt(analysisTime.analysisDuration));
             }
 
             $(".ebacktesting-session-analysis-timer").text("Analysis time: " + (analysisTime.analysisTimespan || "00:00"));
         }
-    }, 900);
+    }, 100);
 
     TradingViewApi.onActiveChartChanged().subscribe(null, () => {
         setTimeout(() => {
             L.createReplayTimestampUI();
-            $("#eBacktestingCurrentDate").text(L.toTradingViewDateTimeFormat(L.replayApi.currentDate().value(), window.TradingViewApi.activeChart().getTimezone()));
+            $("#eBacktestingCurrentDate").text(L.toTradingViewDateTimeFormat(L.r.currentDate().value(), window.TradingViewApi.activeChart().getTimezone()));
         }, 200);
     });
     
@@ -372,7 +372,7 @@ L.createUI = function () {
         }
     });
 
-    L.replayApi.isAutoplayStarted().subscribe((isAutoplayStarted) => {
+    L.r.isAutoplayStarted().subscribe((isAutoplayStarted) => {
         if(L.session.meta.forceStopPlayback) {
             $(".play-pause-button.play").show();
             $(".play-pause-button.pause").hide();
