@@ -21,10 +21,7 @@ const files = [
     "ebacktesting.sessionchannel.js",
     "ebacktesting.sessions.js",
     "ebacktesting.snapshots.js",
-    "ebacktesting.stats.js",
-    "./lightweight-charts.production.mjs",
-    "./html2canvas.esm.js",
-    "./+esm"
+    "ebacktesting.stats.js"
 ];
 
 for (let i = 0; i < files.length; i++) {
