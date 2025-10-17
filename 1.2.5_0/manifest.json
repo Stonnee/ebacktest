@@ -1,0 +1,46 @@
+{
+
+   "content_scripts": [ {
+      "js": [ "injector.js" ],
+      "matches": [ "*://*.tradingview.com/*" ],
+      "run_at": "document_idle"
+   } ],
+   "description": "Adds advanced trade simulation & journaling to TradingView: simulate trades, track positions & analyze performance.",
+   "icons": {
+      "128": "icons/logo-128.png",
+      "16": "icons/logo-16.png",
+      "24": "icons/logo-24.png",
+      "32": "icons/logo-32.png",
+      "48": "icons/logo-48.png",
+      "64": "icons/logo-64.png",
+      "96": "icons/logo-96.png"
+   },
+   "manifest_version": 3,
+   "name": "eeBacktesting.com (TradingView extension)",
+   "version": "1.2.5",
+   "web_accessible_resources": [ {
+      "matches": [ "*://*.tradingview.com/*" ],
+      "resources": [
+         
+        "ebacktesting.js",
+        "ebacktesting.core.js",
+        "ebacktesting.candles.js",
+        "ebacktesting.candles.monitor.js",
+        "ebacktesting.charts.js",
+        "ebacktesting.css.js",
+        "ebacktesting.data.js",
+        "ebacktesting.datetime.js",
+        "ebacktesting.dialogs.analysistimes.js",
+        "ebacktesting.dialogs.gotodate.js",
+        "ebacktesting.dialogs.js",
+        "ebacktesting.dialogs.sessions.js",
+        "ebacktesting.dialogs.settings.js",
+        "ebacktesting.initui.js",
+        "ebacktesting.journal.js",
+        "ebacktesting.positions.js",
+        "ebacktesting.sessionchannel.js",
+        "ebacktesting.sessions.js",
+        "ebacktesting.stats.js"
+      ]
+   } ]
+}
