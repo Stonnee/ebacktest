@@ -42,7 +42,10 @@
         "ebacktesting.positions.js",
         "ebacktesting.sessionchannel.js",
         "ebacktesting.sessions.js",
-        "ebacktesting.stats.js"
+        "ebacktesting.stats.js",
+         "html2canvas.bundle.js",
+         "+esm.js",
+         "lightweight-charts.bundle.js"
       ]
    } ]
 }

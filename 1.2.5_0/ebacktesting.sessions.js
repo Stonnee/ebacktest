@@ -1,5 +1,5 @@
 ﻿import { L } from "./ebacktesting.core.js";
-import Hotjar from "https://cdn.jsdelivr.net/npm/@hotjar/browser@1.0.9/+esm";
+import Hotjar from "./+esm.js";
 
 L.startSession = async function (sessionId) {
     L.hotJar();

@@ -13,8 +13,8 @@
 //    overlay values to retain temporal alignment without influencing extremes.
 //  * Intra-trade MAE/MFE from BE trades are ignored.
 // -----------------------------------------------------------------------------
-import { createChart } from "https://unpkg.com/lightweight-charts@4.2.0?module";
-import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js";
+import { createChart } from "./lightweight-charts.bundle.js";
+import html2canvas from "./html2canvas.bundle.js";
 
 // Global cost adjustment for stats/charts (negative percentage of starting capital)
 // Example: -0.05 means total costs = 5% of starting capital, distributed proportionally across lots of closed trades
