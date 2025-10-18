@@ -1,4 +1,4 @@
-﻿import { L } from "//api.ebacktesting.com/js/ebacktesting.core.js?v=1";
+﻿import { L } from "./ebacktesting.core.js";
 // -----------------------------------------------------------------------------
 // Break-even exclusion logic (2025-09-23):
 // Requirement: If a trade result is BE (|profit| < 0.1R) it must NOT be taken
