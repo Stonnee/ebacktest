@@ -628,61 +628,73 @@ L.createLinesForPosition = async function (position, chart) {
     lineShape.setProperties(lineProperties);
     L.setGeneratedShape(position.meta.entryLineId);
 
-    lineProperties = {
-        shape: "horizontal_line",
-        disableSelection: true,
-        disableSave: true,
-        //disableUndo: true, //this leads to the shape being drawn only on 1 chart
-        showInObjectsTree: false,
-        lineWidth: 1,
-        showLabel: true,
-        horzLabelsAlign: "right",
-        text: `${position.getProfitAtPrice(position.stopPrice())} ${L.session.currencyId} (${position.getProfitPercentage(position.getProfitAtPrice(position.stopPrice(), true))}%)`,
-        vertLabelsAlign: position.quantity > 0 ? "top" : "bottom",
-        linestyle: 1,
-        linecolor: "#FF0000CC",
-        textcolor: "#FF0000CC"
-    };
+    const stopPrice = position.stopPrice();
+    if (!position.meta.disableStopsTargets && stopPrice !== undefined) {
+        lineProperties = {
+            shape: "horizontal_line",
+            disableSelection: true,
+            disableSave: true,
+            //disableUndo: true, //this leads to the shape being drawn only on 1 chart
+            showInObjectsTree: false,
+            lineWidth: 1,
+            showLabel: true,
+            horzLabelsAlign: "right",
+            text: `${position.getProfitAtPrice(stopPrice)} ${L.session.currencyId} (${position.getProfitPercentage(position.getProfitAtPrice(stopPrice, true))}%)`,
+            vertLabelsAlign: position.quantity > 0 ? "top" : "bottom",
+            linestyle: 1,
+            linecolor: "#FF0000CC",
+            textcolor: "#FF0000CC"
+        };
 
-    lineShape = L.getShapeById(position.meta.stopLineId, chart, true);
-    if (!lineShape) {
-        position.meta.stopLineId = await chart.createShape(
-            { price: position.stopPrice(), time: position.entryTime },
-            lineProperties);
-        lineShape = L.getShapeById(position.meta.stopLineId, chart);
+        lineShape = L.getShapeById(position.meta.stopLineId, chart, true);
+        if (!lineShape) {
+            position.meta.stopLineId = await chart.createShape(
+                { price: stopPrice, time: position.entryTime },
+                lineProperties);
+            lineShape = L.getShapeById(position.meta.stopLineId, chart);
+        }
+
+        lineShape.setPoints([{ price: stopPrice, time: position.entryTime }]);
+        lineShape.setProperties(lineProperties);
+        L.setGeneratedShape(position.meta.stopLineId);
+    } else if (position.meta.stopLineId) {
+        L.removeShapeById(position.meta.stopLineId, chart, true);
+        position.meta.stopLineId = null;
     }
 
-    lineShape.setPoints([{ price: position.stopPrice(), time: position.entryTime }]);
-    lineShape.setProperties(lineProperties);
-    L.setGeneratedShape(position.meta.stopLineId);
+    const targetPrice = position.targetPrice();
+    if (!position.meta.disableStopsTargets && targetPrice !== undefined) {
+        lineProperties = {
+            shape: "horizontal_line",
+            disableSelection: true,
+            disableSave: true,
+            //disableUndo: true, //this leads to the shape being drawn only on 1 chart
+            showInObjectsTree: false,
+            lineWidth: 1,
+            showLabel: true,
+            horzLabelsAlign: "right",
+            text: `${position.getProfitAtPrice(targetPrice)} ${L.session.currencyId} (${position.getProfitPercentage(position.getProfitAtPrice(targetPrice, true))}%)`,
+            vertLabelsAlign: position.quantity > 0 ? "bottom" : "top",
+            linestyle: 1,
+            linecolor: "#00FF00CC",
+            textcolor: "#00FF00CC"
+        };
 
-    lineProperties = {
-        shape: "horizontal_line",
-        disableSelection: true,
-        disableSave: true,
-        //disableUndo: true, //this leads to the shape being drawn only on 1 chart
-        showInObjectsTree: false,
-        lineWidth: 1,
-        showLabel: true,
-        horzLabelsAlign: "right",
-        text: `${position.getProfitAtPrice(position.targetPrice())} ${L.session.currencyId} (${position.getProfitPercentage(position.getProfitAtPrice(position.targetPrice(), true))}%)`,
-        vertLabelsAlign: position.quantity > 0 ? "bottom" : "top",
-        linestyle: 1,
-        linecolor: "#00FF00CC",
-        textcolor: "#00FF00CC"
-    };
+        lineShape = L.getShapeById(position.meta.targetLineId, chart, true);
+        if (!lineShape) {
+            position.meta.targetLineId = await chart.createShape(
+                { price: targetPrice, time: position.entryTime },
+                lineProperties);
+            lineShape = L.getShapeById(position.meta.targetLineId, chart);
+        }
 
-    lineShape = L.getShapeById(position.meta.targetLineId, chart, true);
-    if (!lineShape) {
-        position.meta.targetLineId = await chart.createShape(
-            { price: position.targetPrice(), time: position.entryTime },
-            lineProperties);
-        lineShape = L.getShapeById(position.meta.targetLineId, chart);
+        lineShape.setPoints([{ price: targetPrice, time: position.entryTime }]);
+        lineShape.setProperties(lineProperties);
+        L.setGeneratedShape(position.meta.targetLineId);
+    } else if (position.meta.targetLineId) {
+        L.removeShapeById(position.meta.targetLineId, chart, true);
+        position.meta.targetLineId = null;
     }
-
-    lineShape.setPoints([{ price: position.targetPrice(), time: position.entryTime }]);
-    lineShape.setProperties(lineProperties);
-    L.setGeneratedShape(position.meta.targetLineId);
 
     lineProperties = {
         shape: "horizontal_line",
@@ -746,8 +758,13 @@ L.drawShapeForPosition = function (position) {
 
                     const shapeDataSourceProperties = shape.lineDataSource().properties();
 
-                    shapeDataSourceProperties.targetPrice.setValue(position.getShape().targetPrice);
-                    shapeDataSourceProperties.stopPrice.setValue(position.getShape().stopPrice);
+                    if (position.meta.disableStopsTargets) {
+                        shapeDataSourceProperties.targetPrice.setValue(position.entryPrice);
+                        shapeDataSourceProperties.stopPrice.setValue(position.entryPrice);
+                    } else {
+                        shapeDataSourceProperties.targetPrice.setValue(position.getShape().targetPrice);
+                        shapeDataSourceProperties.stopPrice.setValue(position.getShape().stopPrice);
+                    }
 
                     const shapeProperties = {
                         currency: L.session.currencyId,

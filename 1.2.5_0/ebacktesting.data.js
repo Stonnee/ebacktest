@@ -148,22 +148,19 @@ L.dataOps.createPosition = function (position) {
             symbol: null,
             ...{
                 entryTime: new Date(position.entryTime * 1000),
-                positionShapes: position.positionShapes?.map(shape => ({
-                    ...shape,
-                    endTime: new Date(shape.endTime * 1000)
-                })),
+                positionShapes: position.positionShapes?.map(shape => {
+                    const { stopPrice, targetPrice, endTime, ...shapeWithoutStops } = shape;
+                    return {
+                        ...shapeWithoutStops,
+                        endTime: new Date(endTime * 1000)
+                    };
+                }),
                 positionBEs: position.positionBEs?.map(be => ({
                     ...be,
                     barTime: new Date(be.barTime * 1000)
                 })),
-                positionSLs: position.positionSLs?.map(sl => ({
-                    ...sl,
-                    barTime: new Date(sl.barTime * 1000)
-                })),
-                positionTPs: position.positionTPs?.map(tp => ({
-                    ...tp,
-                    barTime: new Date(tp.barTime * 1000)
-                })),
+                positionSLs: undefined,
+                positionTPs: undefined,
                 positionRisks: position.positionRisks?.map(risk => ({
                     ...risk,
                     barTime: new Date(risk.barTime * 1000)
@@ -195,12 +192,12 @@ L.dataOps.addPositionRisk = function (positionId, risk) {
     return L.dataOps.put(L.s(3, 8, positionId) /* backtesting/positions/risk/{0} */, { ...risk, barTime: new Date(risk.barTime * 1000) });
 }
 
-L.dataOps.addPositionSL = function (positionId, sl) {
-    return L.dataOps.put(L.s(3, 9, positionId) /* backtesting/positions/sl/{0} */, { ...sl, barTime: new Date(sl.barTime * 1000) });
+L.dataOps.addPositionSL = function (_positionId, _sl) {
+    return Promise.resolve();
 }
 
-L.dataOps.addPositionTP = function (positionId, tp) {
-    return L.dataOps.put(L.s(4, 0, positionId) /* backtesting/positions/tp/{0} */, { ...tp, barTime: new Date(tp.barTime * 1000) });
+L.dataOps.addPositionTP = function (_positionId, _tp) {
+    return Promise.resolve();
 }
 
 L.dataOps.getPositionShapes = function (positionId) {

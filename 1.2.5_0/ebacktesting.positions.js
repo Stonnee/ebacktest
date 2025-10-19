@@ -18,10 +18,12 @@ L.openPosition = async function (position, shapeChartInfo, shape) {
     position.positionShapes = [{
         shapeId: shapeChartInfo.shapeInfo.id,
         name: shapeChartInfo.shapeInfo.name,
-        stopPrice: shapeDataSourceProperties.stopPrice.value(),
-        targetPrice: shapeDataSourceProperties.targetPrice.value(),
+        stopPrice: undefined,
+        targetPrice: undefined,
         endTime: shapePoints[1].time,
     }];
+
+    position.meta.disableStopsTargets = true;
 
     L.keepShapeInfoInSync(position, shape, shapeDataSourceProperties);
 
@@ -42,21 +44,29 @@ L.openPosition = async function (position, shapeChartInfo, shape) {
     position.quantity = shapeDataSourceProperties.qty.value() / position.symbol.meta.contractSize * (shapeChartInfo.shapeInfo.name == 'long_position' ? 1 : -1);
     if (position.quantity) {
 
-        position.stopPrice(position.meta.currentStopPrice = position.getShape().stopPrice, true);
-        position.targetPrice(position.meta.currentTargetPrice = position.getShape().targetPrice, true);
-        position.risk((position.entryPrice - position.stopPrice()) * position.quantity * position.symbol.meta.contractSize * position.entryCurrencyRate * position.symbol.meta.pointSize, true);
+        if (!position.meta.disableStopsTargets) {
+            position.stopPrice(position.meta.currentStopPrice = position.getShape().stopPrice, true);
+            position.targetPrice(position.meta.currentTargetPrice = position.getShape().targetPrice, true);
+            position.risk((position.entryPrice - position.stopPrice()) * position.quantity * position.symbol.meta.contractSize * position.entryCurrencyRate * position.symbol.meta.pointSize, true);
+        } else {
+            position.risk(0, true);
+        }
 
-        try {
-            const sl = position.stopPrice(undefined, true, 0);
-            const tp = position.targetPrice(undefined, true, 0);
-            const entry = position.entryPrice;
-            if (entry != null && sl != null && tp != null && entry !== sl) {
-                const rr = Math.abs(tp - entry) / Math.abs(entry - sl);
-                if (Number.isFinite(rr)) {
-                    position.columnValue("RR", Number(rr.toFixed(2)), true);
+        if (!position.meta.disableStopsTargets) {
+            try {
+                const sl = position.stopPrice(undefined, true, 0);
+                const tp = position.targetPrice(undefined, true, 0);
+                const entry = position.entryPrice;
+                if (entry != null && sl != null && tp != null && entry !== sl) {
+                    const rr = Math.abs(tp - entry) / Math.abs(entry - sl);
+                    if (Number.isFinite(rr)) {
+                        position.columnValue("RR", Number(rr.toFixed(2)), true);
+                    }
                 }
-            }
-        } catch(_e) { /* ignore RR init errors */ }
+            } catch(_e) { /* ignore RR init errors */ }
+        } else {
+            position.columnValue("RR", null, true);
+        }
 
         if(L.session.getParameter(L.sessionParameterIds.RiskWarning) == L.s(0, 6) /* true */) {
             setTimeout(() => {
@@ -140,9 +150,21 @@ L.closePosition = async function (position, exitReason, chart) {
 L.setPositionFunctions = function (position) {
     Object.defineProperty(position, 'meta', { value: {}, writable: true, enumerable: false });
 
+    position.meta.disableStopsTargets = true;
+
     position.getShape = function () {
         return position.positionShapes[0];
     };
+
+    if (position.meta.disableStopsTargets && position.positionShapes?.length) {
+        position.positionShapes[0].stopPrice = undefined;
+        position.positionShapes[0].targetPrice = undefined;
+    }
+
+    if (position.meta.disableStopsTargets) {
+        position.positionSLs = [];
+        position.positionTPs = [];
+    }
 
     position.getColumn = function (columnName, sessionColumn) {
         if (!sessionColumn) {
@@ -184,6 +206,10 @@ L.setPositionFunctions = function (position) {
             position.positionSLs = [];
         }
 
+        if (position.meta.disableStopsTargets) {
+            return index === undefined ? position.positionSLs[position.positionSLs.length - 1]?.sl : position.positionSLs[index]?.sl;
+        }
+
         if (value !== undefined) {
             if (position.positionSLs.slice(-1)[0]?.sl != value) {
                 const chart = L.getPositionChart(position, true);
@@ -209,11 +235,15 @@ L.setPositionFunctions = function (position) {
             position.positionTPs = [];
         }
 
+        if (position.meta.disableStopsTargets) {
+            return index === undefined ? position.positionTPs[position.positionTPs.length - 1]?.tp : position.positionTPs[index]?.tp;
+        }
+
         if (value !== undefined) {
             if (position.positionTPs.slice(-1)[0]?.tp != value) {
                 const chart = L.getPositionChart(position, true);
                 const barTime = chart ? Math.max(chart.barsHistoryEntries.slice(-1)[0]?.time || L.session.currentDate, chart.priceHistoryEntries.slice(-1)[0]?.time || L.session.currentDate) : L.session.currentDate;
-               
+
                 const positionTP = { tp: value, barTime: barTime };
                 position.positionTPs.push(positionTP);
                 if (!dontStore) {
@@ -521,31 +551,36 @@ L.updateActivePositions = async function () {
 }
 
 L.assessTracking = async function (position, bar) {
+    const sls = position.positionSLs || [];
+    const tps = position.positionTPs || [];
+    const lastSL = sls[sls.length - 1];
+    const lastTP = tps[tps.length - 1];
+
     if (position.quantity > 0) {
-        if (position.meta.trackBeRunUp && (bar.low || bar.price) <= position.entryPrice && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+        if (lastSL && position.meta.trackBeRunUp && (bar.low || bar.price) <= position.entryPrice && lastSL.barTime <= bar.time) {
             position.meta.trackBeRunUp = false;
         }
 
-        if ((position.meta.trackRunUp || position.meta.trackBeRunUp) && (bar.low || bar.price) <= position.positionSLs[0]?.sl && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+        if (lastSL && (position.meta.trackRunUp || position.meta.trackBeRunUp) && (bar.low || bar.price) <= sls[0]?.sl && lastSL.barTime <= bar.time) {
             position.meta.trackRunUp = false;
             position.meta.trackBeRunUp = false;
         }
 
-        if (position.meta.trackDrawDown && (bar.high || bar.price) >= position.positionTPs[0]?.tp && position.positionTPs[position.positionTPs.length - 1].barTime <= bar.time) {
+        if (lastTP && position.meta.trackDrawDown && (bar.high || bar.price) >= tps[0]?.tp && lastTP.barTime <= bar.time) {
             position.meta.trackDrawDown = false;
         }
     }
     else if (position.quantity < 0) {
-        if (position.meta.trackBeRunUp && (bar.high || bar.price) >= position.entryPrice && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+        if (lastSL && position.meta.trackBeRunUp && (bar.high || bar.price) >= position.entryPrice && lastSL.barTime <= bar.time) {
             position.meta.trackBeRunUp = false;
         }
 
-        if ((position.meta.trackRunUp || position.meta.trackBeRunUp) && (bar.high || bar.price) >= position.positionSLs[0]?.sl && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+        if (lastSL && (position.meta.trackRunUp || position.meta.trackBeRunUp) && (bar.high || bar.price) >= sls[0]?.sl && lastSL.barTime <= bar.time) {
             position.meta.trackRunUp = false;
             position.meta.trackBeRunUp = false;
         }
 
-        if (position.meta.trackDrawDown && (bar.low || bar.price) <= position.positionTPs[0]?.tp && position.positionTPs[position.positionTPs.length - 1].barTime <= bar.time) {
+        if (lastTP && position.meta.trackDrawDown && (bar.low || bar.price) <= tps[0]?.tp && lastTP.barTime <= bar.time) {
             position.meta.trackDrawDown = false;
         }
     }
@@ -715,26 +750,31 @@ L.detectExit = function (position, chart, bar, previousBar) {
         }
     }
     
-    if (position.quantity > 0) {
-        if ((bar.low || bar.price) <= position.stopPrice() && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+    const sls = position.positionSLs || [];
+    const tps = position.positionTPs || [];
+    const lastSL = sls[sls.length - 1];
+    const lastTP = tps[tps.length - 1];
+
+    if (lastSL && position.quantity > 0) {
+        if ((bar.low || bar.price) <= position.stopPrice() && lastSL.barTime <= bar.time) {
             position.exitPrice = position.stopPrice();
         }
 
-        if ((bar.high || bar.price) >= position.targetPrice() && position.positionTPs[position.positionTPs.length - 1].barTime <= bar.time) {
+        if (lastTP && (bar.high || bar.price) >= position.targetPrice() && lastTP.barTime <= bar.time) {
             position.exitPrice = position.targetPrice();
         }
     }
-    else if (position.quantity < 0) {
-        if ((bar.high || bar.price) >= position.stopPrice() && position.positionSLs[position.positionSLs.length - 1].barTime <= bar.time) {
+    else if (lastSL && position.quantity < 0) {
+        if ((bar.high || bar.price) >= position.stopPrice() && lastSL.barTime <= bar.time) {
             position.exitPrice = position.stopPrice();
         }
 
-        if ((bar.low || bar.price) <= position.targetPrice() && position.positionTPs[position.positionTPs.length - 1].barTime <= bar.time) {
+        if (lastTP && (bar.low || bar.price) <= position.targetPrice() && lastTP.barTime <= bar.time) {
             position.exitPrice = position.targetPrice();
         }
     }
 
-    if (position.exitPrice) {
+    if (position.exitPrice && (lastSL || lastTP)) {
         if(position.exitPrice == position.stopPrice()) {
             L.toast(L.s(2, -6) /* Stop loss hit */, 2000, "warn");
         } else if(position.exitPrice == position.targetPrice()) {
@@ -748,6 +788,12 @@ L.detectExit = function (position, chart, bar, previousBar) {
 }
 
 L.keepShapeInfoInSync = function (position, shape, shapeDataSourceProperties) {
+    if (position.meta.disableStopsTargets) {
+        shapeDataSourceProperties.targetPrice.setValue(position.entryPrice);
+        shapeDataSourceProperties.stopPrice.setValue(position.entryPrice);
+        return;
+    }
+
     shapeDataSourceProperties.stopPrice.subscribe(null, () => {
         if (position.meta.setShapeStopPriceTimeout) {
             clearTimeout(position.meta.setShapeStopPriceTimeout);
@@ -787,6 +833,10 @@ L.keepShapeInfoInSync = function (position, shape, shapeDataSourceProperties) {
 }
 
 L.setStopPrice = function (position, price, immediate) {
+    if (position.meta.disableStopsTargets) {
+        return;
+    }
+
     if (position.meta.pendingNewStopPrice != price) {
         position.meta.pendingNewStopPrice = price;
         if (position.positionSLs?.slice(-1)[0] != price) {
@@ -801,7 +851,7 @@ L.setStopPrice = function (position, price, immediate) {
                     || (position.quantity > 0 && position.bePrice() && price > position.bePrice())
                     || (position.quantity < 0 && position.bePrice() && price < position.bePrice())
                     ;
-        
+
                     if (!immediate && isInvalidPrice) {
                         L.applyOnCharts((chart) => {
                             L.getShapeById(position.meta.stopLineId, chart, true)?.setPoints(
@@ -827,7 +877,7 @@ L.setStopPrice = function (position, price, immediate) {
                 if (position.meta.setStopPriceTimeout) {
                     clearTimeout(position.meta.setStopPriceTimeout);
                 }
-            
+
                 position.meta.setStopPriceTimeout = setTimeout(setStopPrice, 1000);
             }
         }
@@ -835,6 +885,10 @@ L.setStopPrice = function (position, price, immediate) {
 }
 
 L.setTargetPrice = function (position, price) {
+    if (position.meta.disableStopsTargets) {
+        return;
+    }
+
     if (position.meta.pendingNewTargetPrice != price) {
         position.meta.pendingNewTargetPrice = price;
         if (position.positionTPs?.slice(-1)[0] != price) {
@@ -853,7 +907,7 @@ L.setTargetPrice = function (position, price) {
                     || (position.quantity > 0 && position.bePrice() && price < position.bePrice())
                     || (position.quantity < 0 && position.bePrice() && price > position.bePrice())
                     ;
-        
+
                     if (isInvalidPrice) {
                         L.applyOnCharts((chart) => {
                             L.getShapeById(position.meta.targetLineId, chart, true)?.setPoints(
@@ -863,7 +917,7 @@ L.setTargetPrice = function (position, price) {
                     }
                     else {
                         position.targetPrice(price);
-                        
+
                         L.applyOnCharts((chart) => {
                             L.getShapeById(position.meta.targetLineId, chart, true)?.setProperties({
                                 text: `${position.getProfitAtPrice(position.targetPrice())} ${L.session.currencyId} (${position.getProfitPercentage(position.getProfitAtPrice(position.targetPrice(), true))}%)`,
